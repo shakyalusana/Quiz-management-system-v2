@@ -1,11 +1,11 @@
-
 import RouteError from "./RouteError";
 import { lazy } from "react";
-import DashboardLayout from "@/components/dashboard";
 import AdministratorProtectedRoute from "./AdministratorProtectedRoutes";
 import LazyWrapper from "@/components/LazyWrapper";
+import DashboardLayout from "@/pages/admin/dashboard";
 
 const NotFoundRoute = lazy(() => import("../components/notFound"));
+const AdminDashboard = lazy(() => import("../pages/admin/dashboard/index"));
 
 const SuperAdmin = [
   {

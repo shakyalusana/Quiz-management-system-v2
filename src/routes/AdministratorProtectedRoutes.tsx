@@ -1,10 +1,8 @@
-
 import { useNavigate, Outlet } from "react-router-dom";
 import { useEffect, useMemo } from "react";
 import { fetchToken } from "@/libs/storage";
 import { getUserRoleFromToken } from "@/libs/useUserStorage";
 import MainLoader from "@/components/MainLoader";
-
 
 const AdministratorProtectedRoute = () => {
   const navigate = useNavigate();
