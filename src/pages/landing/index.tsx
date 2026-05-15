@@ -22,7 +22,7 @@ const index = () => {
           </div>
         </div>
       </header>
-      <section className="bg-[image:var(--gradient-hero)] text-primary-foreground">
+      <section className="bg-(image:--gradient-hero) text-primary-foreground">
         <div className="mx-auto max-w-6xl px-6 py-24 text-center space-y-6">
           <div className="inline-flex items-center gap-2 rounded-full bg-primary-foreground/10 px-4 py-1.5 text-xs font-medium backdrop-blur">
             <Brain className="h-4 w-4" /> Quiz Management System
