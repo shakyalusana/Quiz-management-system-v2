@@ -14,6 +14,10 @@ import {
 import { Logo } from "./Logo";
 import LinkComponent from "./Link";
 import { useLocation } from "react-router-dom";
+import { USERAUTHAPI } from "@/api/auth";
+import { removeUser } from "@/libs/storage";
+import Cookies from "js-cookie";
+import { useAuthStore } from "@/store/authStore/authStore";
 
 export interface NavItem {
   title: string;
@@ -31,6 +35,16 @@ export function AppSidebar({ label, items }: AppSidebarProps) {
   const currentPath = location.pathname;
   const isActive = (url: string) =>
     currentPath === url || currentPath.startsWith(url + "/");
+
+  const { mutate: logout } = USERAUTHAPI.useUserLogout();
+  const handleLogout = () => {
+    Object.keys(Cookies.get()).forEach((cookie) => Cookies.remove(cookie));
+    localStorage.clear();
+    removeUser();
+    logout();
+    useAuthStore.getState().resetAuth();
+    window.location.href = "/";
+  };
 
   return (
     <Sidebar collapsible="icon">
@@ -63,7 +77,10 @@ export function AppSidebar({ label, items }: AppSidebarProps) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
-              <LinkComponent href="/login" className="flex items-center gap-2">
+              <LinkComponent
+                onClick={handleLogout}
+                className="flex items-center gap-2"
+              >
                 <LogOut className="h-4 w-4" />
                 <span>Logout</span>
               </LinkComponent>
