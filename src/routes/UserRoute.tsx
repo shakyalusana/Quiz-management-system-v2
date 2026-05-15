@@ -9,6 +9,8 @@ const NotFoundRoute = lazy(() => import("../components/notFound"));
 const UserDashboard = lazy(
   () => import("../components/playersDashboard/index"),
 );
+const UserQuiz = lazy(() => import("../pages/player/Quiz"));
+const UserQuizReview = lazy(() => import("../pages/player/quizReview"));
 const UserRoute = [
   {
     element: <ProtectedRoute />,
@@ -21,6 +23,14 @@ const UserRoute = [
           {
             index: true,
             element: <LazyWrapper Component={UserDashboard} />,
+          },
+          {
+            path: "quiz",
+            element: <LazyWrapper Component={UserQuiz} />,
+          },
+          {
+            path: "quiz-review",
+            element: <LazyWrapper Component={UserQuizReview} />,
           },
           {
             path: "*",

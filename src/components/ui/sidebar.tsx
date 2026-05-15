@@ -13,7 +13,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "./sheet";
-import { Tooltip, TooltipContent, TooltipTrigger } from "./tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../tooltip";
 import { PanelLeftIcon } from "lucide-react";
 import { useIsMobile } from "@/hooks/useMobile";
 import { cn } from "@/libs/utils";

@@ -5,12 +5,12 @@ import {
   ClipboardCheck,
   Sparkles,
 } from "lucide-react";
-import { AppSidebar, NavItem } from "@/components/quiz/AppSidebar";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "../avatar";
 import LinkComponent from "../Link";
 import { Outlet } from "react-router-dom";
-import { SidebarInset, SidebarProvider, SidebarTrigger } from "../sidebar";
+import { SidebarInset, SidebarProvider, SidebarTrigger } from "../ui/sidebar";
+import { AppSidebar, type NavItem } from "../AppSideBar";
 
 const items: NavItem[] = [
   { title: "Welcome", url: "/players", icon: Sparkles },
