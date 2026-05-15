@@ -6,7 +6,9 @@ import LazyWrapper from "@/components/LazyWrapper";
 import UserDashboardLayout from "@/pages/player/dashboard";
 
 const NotFoundRoute = lazy(() => import("../components/notFound"));
-const UserDashboard = lazy(() => import("../pages/player/dashboard/index"));
+const UserDashboard = lazy(
+  () => import("../components/playersDashboard/index"),
+);
 const UserRoute = [
   {
     element: <ProtectedRoute />,

@@ -1,4 +1,3 @@
-
 import { useNavigate, Outlet } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo } from "react";

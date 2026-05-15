@@ -1,4 +1,3 @@
-
 import { useNavigate, Outlet } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import { fetchToken } from "@/libs/storage";
@@ -25,7 +24,7 @@ const ProtectedRoute = () => {
     if (!token) return false;
 
     if (typeof role === "string") {
-      return role === "user";
+      return role === "player";
     }
 
     return false;
