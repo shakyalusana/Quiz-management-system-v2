@@ -3,6 +3,7 @@ import { lazy } from "react";
 import RouteError from "./RouteError";
 import PublicRoute from "./Public";
 import LazyWrapper from "@/components/LazyWrapper";
+import AuthLayout from "@/pages/auth";
 
 // lazy loaded pages
 const LandingPage = lazy(() => import("../pages/landing"));
@@ -20,12 +21,24 @@ const CommonRoutes = [
         element: <LazyWrapper Component={LandingPage} />,
       },
       {
-        path: "login",
-        element: <LazyWrapper Component={LoginPage} />,
+        path: "/login",
+        element: <AuthLayout />,
+        children: [
+          {
+            index: true,
+            element: <LazyWrapper Component={LoginPage} />,
+          },
+        ],
       },
       {
-        path: "register",
-        element: <LazyWrapper Component={RegisterPage} />,
+        path: "/register",
+        element: <AuthLayout />,
+        children: [
+          {
+            index: true,
+            element: <LazyWrapper Component={RegisterPage} />,
+          },
+        ],
       },
       {
         path: "*",

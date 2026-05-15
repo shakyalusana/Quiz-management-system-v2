@@ -16,7 +16,7 @@ const AdministratorProtectedRoute = () => {
     if (!token || !role) return false;
 
     // allow only SuperAdmin or User
-    if (role === "superadmin" || role === "User") {
+    if (role === "superadmin" || role === "player") {
       return true;
     }
 

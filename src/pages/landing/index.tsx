@@ -1,5 +1,6 @@
 import LinkComponent from "@/components/Link";
 import { Logo } from "@/components/Logo";
+import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler";
 import { Button } from "@/components/ui/button";
 import { Brain, PlayCircle, Trophy, Users } from "lucide-react";
 
@@ -10,6 +11,8 @@ const index = () => {
         <div className="mx-auto max-w-6xl flex items-center justify-between px-6 py-4">
           <Logo />
           <div className="flex gap-2">
+            <AnimatedThemeToggler />
+
             <Button asChild variant="ghost">
               <LinkComponent href="/login">Sign in</LinkComponent>
             </Button>
