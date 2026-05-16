@@ -41,7 +41,7 @@ router.get("/", auth, async (req, res) => {
   }
 });
 
-router.get("/:id", [auth, adminAuth], async (req, res) => {
+router.get("/:id", auth, async (req, res) => {
   try {
     const question = await Question.findById(req.params.id).populate(
       "category",
@@ -89,7 +89,7 @@ router.get("/count/:categoryId", auth, async (req, res) => {
   }
 });
 
-router.post("/", [auth, adminAuth, validateQuestion], async (req, res) => {
+router.post("/", [auth, validateQuestion], async (req, res) => {
   try {
     const {
       text,
@@ -115,7 +115,7 @@ router.post("/", [auth, adminAuth, validateQuestion], async (req, res) => {
   }
 });
 
-router.patch("/:id", [auth, adminAuth, validateQuestion], async (req, res) => {
+router.patch("/:id", [auth, validateQuestion], async (req, res) => {
   try {
     const { text, options, correctOption, category, difficulty } = req.body;
     const updates = {};
@@ -140,7 +140,7 @@ router.patch("/:id", [auth, adminAuth, validateQuestion], async (req, res) => {
   }
 });
 
-router.delete("/:id", [auth, adminAuth], async (req, res) => {
+router.delete("/:id", auth, async (req, res) => {
   try {
     const question = await Question.findById(req.params.id);
     if (!question) {

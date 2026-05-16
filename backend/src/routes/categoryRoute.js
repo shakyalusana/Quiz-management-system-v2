@@ -17,7 +17,7 @@ router.get("/", auth, async (req, res) => {
 });
 
 // Create a new category (admin only)
-router.post("/", [auth, adminAuth], async (req, res) => {
+router.post("/", auth, async (req, res) => {
   try {
     const { name } = req.body;
 
@@ -41,7 +41,7 @@ router.post("/", [auth, adminAuth], async (req, res) => {
 });
 
 // Update a category (admin only)
-router.put("/:id", [auth, adminAuth], async (req, res) => {
+router.put("/:id", auth, async (req, res) => {
   try {
     const { name } = req.body;
 
@@ -63,7 +63,7 @@ router.put("/:id", [auth, adminAuth], async (req, res) => {
 });
 
 // Delete a category (admin only)
-router.delete("/:id", [auth, adminAuth], async (req, res) => {
+router.delete("/:id", auth, async (req, res) => {
   try {
     // Check if category exists
     const category = await Category.findById(req.params.id);
