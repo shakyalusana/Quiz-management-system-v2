@@ -5,6 +5,11 @@ import cors from "cors";
 import connectDB from "./config/db.js";
 
 import authRoutes from "./routes/authRoute.js";
+import categoryRoutes from "./routes/categoryRoute.js";
+import questionRoutes from "./routes/questions.js";
+import quizRoutes from "./routes/quizRoute.js";
+import playerRoutes from "./routes/playerRoute.js";
+import adminRoutes from "./routes/adminRoute.js";
 
 import protect from "./middleware/authMiddleware.js";
 
@@ -21,6 +26,11 @@ app.use(express.json());
 
 // Routes
 app.use("/api/auth", authRoutes);
+app.use("/api/categories", categoryRoutes);
+app.use("/api/questions", questionRoutes);
+app.use("/api/quiz", quizRoutes);
+app.use("/api/player", playerRoutes);
+app.use("/api/admin", adminRoutes);
 
 // PLAYER ROUTE
 app.get("/api/player", protect, (req, res) => {
