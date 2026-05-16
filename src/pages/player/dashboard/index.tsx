@@ -13,20 +13,21 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { LinkComponent } from "@/components/Link";
-import { Avatar, AvatarFallback } from "@/components/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler";
+import DefaultContainer from "@/components/DefaultContainer";
 
 const items: NavItem[] = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-  { title: "Take Quiz", url: "/quiz", icon: PlayCircle },
-  { title: "Quiz Review", url: "/quiz-review", icon: ClipboardCheck },
-  { title: "History", url: "/history", icon: History },
+  { title: "Take Quiz", url: "/dashboard/quiz", icon: PlayCircle },
+  { title: "Quiz Review", url: "/dashboard/quiz-review", icon: ClipboardCheck },
+  { title: "History", url: "/dashboard/history", icon: History },
 ];
 
 export default function UserDashboardLayout() {
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background">
+      <DefaultContainer className="min-h-screen flex w-full bg-background">
         <AppSidebar label="Player" items={items} />
         <SidebarInset>
           <header className="h-14 flex items-center gap-3 border-b bg-background/80 backdrop-blur px-4 sticky top-0 z-10">
@@ -49,7 +50,7 @@ export default function UserDashboardLayout() {
             <Outlet />
           </main>
         </SidebarInset>
-      </div>
+      </DefaultContainer>
     </SidebarProvider>
   );
 }

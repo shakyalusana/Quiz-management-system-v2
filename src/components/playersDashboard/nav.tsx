@@ -6,7 +6,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "../avatar";
+import { Avatar, AvatarFallback } from "../ui/avatar";
 import LinkComponent from "../Link";
 import { Outlet } from "react-router-dom";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "../ui/sidebar";
