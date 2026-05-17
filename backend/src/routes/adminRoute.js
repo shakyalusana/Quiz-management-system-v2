@@ -1,15 +1,14 @@
 import express from "express";
-import User from "../models/User.js";
+import User from "../models/user.js";
 import QuizResult from "../models/quiz.js";
 import Question from "../models/question.js";
 import Category from "../models/category.js";
 import auth from "../middleware/authMiddleware.js";
-import adminAuth from "../middleware/adminAuth.js";
 
-const router = express.Router();
+const authAdminRoute = express.Router();
 
 // Get admin dashboard data
-router.get("/dashboard", [auth, adminAuth], async (req, res) => {
+authAdminRoute.get("/dashboard", auth, async (req, res) => {
   try {
     // Get counts
     const totalQuestions = await Question.countDocuments();
@@ -73,7 +72,7 @@ router.get("/dashboard", [auth, adminAuth], async (req, res) => {
 });
 
 // Get leaderboard
-router.get("/leaderboard", [auth, adminAuth], async (req, res) => {
+authAdminRoute.get("/leaderboard", auth, async (req, res) => {
   try {
     const results = await QuizResult.find()
       .populate("player", "name")
@@ -151,7 +150,7 @@ router.get("/leaderboard", [auth, adminAuth], async (req, res) => {
 });
 
 // Get all players
-router.get("/players", [auth, adminAuth], async (req, res) => {
+authAdminRoute.get("/players", auth, async (req, res) => {
   try {
     const players = await User.find({ role: "player" }, "-password");
 
@@ -195,7 +194,7 @@ router.get("/players", [auth, adminAuth], async (req, res) => {
 });
 
 // Get player details
-router.get("/players/:id", [auth, adminAuth], async (req, res) => {
+authAdminRoute.get("/players/:id", auth, async (req, res) => {
   try {
     const player = await User.findById(req.params.id, "-password");
 
@@ -249,7 +248,7 @@ router.get("/players/:id", [auth, adminAuth], async (req, res) => {
 });
 
 // Delete player
-router.delete("/players/:id", [auth, adminAuth], async (req, res) => {
+authAdminRoute.delete("/players/:id", auth, async (req, res) => {
   try {
     const player = await User.findById(req.params.id);
 
@@ -267,4 +266,4 @@ router.delete("/players/:id", [auth, adminAuth], async (req, res) => {
   }
 });
 
-export default adminAuth;
+export default authAdminRoute;

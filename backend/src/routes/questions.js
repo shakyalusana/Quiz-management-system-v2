@@ -3,13 +3,12 @@ import mongoose from "mongoose";
 
 import Question from "../models/question.js";
 import auth from "../middleware/authMiddleware.js";
-import adminAuth from "../middleware/adminAuth.js";
 import validateQuestion from "../middleware/validateQuestion.js";
 
-const router = express.Router();
+const questionRoutes = express.Router();
 
 // PUBLIC route - Get quiz questions
-router.get("/quiz", async (req, res) => {
+questionRoutes.get("/quiz", async (req, res) => {
   try {
     const { categoryId, count = 5 } = req.query;
 
@@ -32,7 +31,7 @@ router.get("/quiz", async (req, res) => {
 });
 
 // ✅ PROTECTED routes (admin only)
-router.get("/", auth, async (req, res) => {
+questionRoutes.get("/", auth, async (req, res) => {
   try {
     const questions = await Question.find().populate("category");
     res.json(questions);
@@ -41,7 +40,7 @@ router.get("/", auth, async (req, res) => {
   }
 });
 
-router.get("/:id", auth, async (req, res) => {
+questionRoutes.get("/:id", auth, async (req, res) => {
   try {
     const question = await Question.findById(req.params.id).populate(
       "category",
@@ -61,7 +60,7 @@ router.get("/:id", auth, async (req, res) => {
 });
 
 // Get questions by difficulty
-router.get("/difficulty/:level", auth, async (req, res) => {
+questionRoutes.get("/difficulty/:level", auth, async (req, res) => {
   try {
     const { level } = req.params;
     if (!["easy", "medium", "hard"].includes(level)) {
@@ -77,7 +76,7 @@ router.get("/difficulty/:level", auth, async (req, res) => {
 });
 
 // Get question count for a category
-router.get("/count/:categoryId", auth, async (req, res) => {
+questionRoutes.get("/count/:categoryId", auth, async (req, res) => {
   try {
     const count = await Question.countDocuments({
       category: req.params.categoryId,
@@ -89,7 +88,7 @@ router.get("/count/:categoryId", auth, async (req, res) => {
   }
 });
 
-router.post("/", [auth, validateQuestion], async (req, res) => {
+questionRoutes.post("/", [auth, validateQuestion], async (req, res) => {
   try {
     const {
       text,
@@ -115,7 +114,7 @@ router.post("/", [auth, validateQuestion], async (req, res) => {
   }
 });
 
-router.patch("/:id", [auth, validateQuestion], async (req, res) => {
+questionRoutes.patch("/:id", [auth, validateQuestion], async (req, res) => {
   try {
     const { text, options, correctOption, category, difficulty } = req.body;
     const updates = {};
@@ -140,7 +139,7 @@ router.patch("/:id", [auth, validateQuestion], async (req, res) => {
   }
 });
 
-router.delete("/:id", auth, async (req, res) => {
+questionRoutes.delete("/:id", auth, async (req, res) => {
   try {
     const question = await Question.findById(req.params.id);
     if (!question) {
@@ -153,4 +152,4 @@ router.delete("/:id", auth, async (req, res) => {
   }
 });
 
-export default router;
+export default questionRoutes;

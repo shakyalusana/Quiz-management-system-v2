@@ -9,14 +9,11 @@ import categoryRoutes from "./routes/categoryRoute.js";
 import questionRoutes from "./routes/questions.js";
 import quizRoutes from "./routes/quizRoute.js";
 import playerRoutes from "./routes/playerRoute.js";
-import adminRoutes from "./routes/adminRoute.js";
+import authAdminRoute from "./routes/adminRoute.js";
 import recommendationRoutes from "./routes/recommendationRoutes.js";
+import listEndpoints from "express-list-endpoints";
 
-import protect from "./middleware/authMiddleware.js";
-
-import superAdminOnly from "./middleware/roleMiddleware.js";
-
-dotenv.config();
+dotenv.config({ path: "../.env" });
 
 connectDB();
 
@@ -31,26 +28,14 @@ app.use("/api/categories", categoryRoutes);
 app.use("/api/questions", questionRoutes);
 app.use("/api/quiz", quizRoutes);
 app.use("/api/player", playerRoutes);
-app.use("/api/admin", adminRoutes);
 app.use("/api", recommendationRoutes);
-
-// PLAYER ROUTE
-app.get("/api/player", protect, (req, res) => {
-  res.json({
-    message: "Player Dashboard",
-    user: req.user,
-  });
-});
-
-// SUPERADMIN ROUTE
-app.get("/api/admin", protect, superAdminOnly, (req, res) => {
-  res.json({
-    message: "Welcome Super Admin",
-  });
-});
+app.use("/api/admin", authAdminRoute);
 
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+
+  console.log("📡 Registered Routes:");
+  console.table(listEndpoints(app));
 });

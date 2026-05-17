@@ -4,11 +4,13 @@ import Question from "../models/question.js";
 import Category from "../models/category.js";
 import auth from "../middleware/authMiddleware.js";
 import { fisherYatesShuffle } from "../utils/randomizer.js";
+import { calculateEloRating } from "../utils/eloRating.js";
+import User from "../models/user.js";
 
-const router = express.Router();
+const quizRoutes = express.Router();
 
 // Get questions for quiz
-router.post("/questions", auth, async (req, res) => {
+quizRoutes.post("/questions", auth, async (req, res) => {
   try {
     const { categoryId, difficulty = "medium", count = 10 } = req.body;
 
@@ -52,22 +54,21 @@ router.post("/questions", auth, async (req, res) => {
 });
 
 // Submit quiz results
-router.post("/submit", auth, async (req, res) => {
+quizRoutes.post("/submit", auth, async (req, res) => {
   try {
-    const { categoryId, answers, score, stats } = req.body;
-
-    // Validate inputs
+    const { categoryId, answers, score, stats, difficulty } = req.body;
     if (!categoryId || !answers || score === undefined) {
-      return res.status(400).json({ message: "Missing required fields" });
+      return res.status(400).json({
+        message: "Missing required fields",
+      });
     }
-
-    // Check if category exists
     const category = await Category.findById(categoryId);
-    if (!category) {
-      return res.status(404).json({ message: "Category not found" });
-    }
 
-    // Create quiz result
+    if (!category) {
+      return res.status(404).json({
+        message: "Category not found",
+      });
+    }
     const quizResult = new QuizResult({
       player: req.user.userId,
       category: categoryId,
@@ -80,16 +81,41 @@ router.post("/submit", auth, async (req, res) => {
         points: answer.points,
         difficulty: answer.difficulty,
       })),
+
       stats,
     });
 
     await quizResult.save();
+    const user = await User.findById(req.user.userId);
 
-    res.status(201).json({ message: "Quiz results submitted successfully" });
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    const eloResult = calculateEloRating({
+      currentRating: user.rating,
+      quizDifficulty: difficulty || "medium",
+      score,
+      totalQuestions: answers.length,
+    });
+
+    user.rating = eloResult.newRating;
+
+    await user.save();
+
+    res.status(201).json({
+      message: "Quiz results submitted successfully",
+      elo: eloResult,
+      currentRating: user.rating,
+    });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({
+      message: "Server error",
+    });
   }
 });
 
-export default router;
+export default quizRoutes;

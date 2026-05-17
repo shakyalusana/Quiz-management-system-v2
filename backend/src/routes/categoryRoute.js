@@ -1,12 +1,11 @@
 import express from "express";
 import Category from "../models/category.js";
 import auth from "../middleware/authMiddleware.js";
-import adminAuth from "../middleware/adminAuth.js";
 
-const router = express.Router();
+const categoryRoutes = express.Router();
 
 // Get all categories
-router.get("/", auth, async (req, res) => {
+categoryRoutes.get("/", auth, async (req, res) => {
   try {
     const categories = await Category.find().sort("name");
     res.json(categories);
@@ -17,7 +16,7 @@ router.get("/", auth, async (req, res) => {
 });
 
 // Create a new category (admin only)
-router.post("/", auth, async (req, res) => {
+categoryRoutes.post("/", auth, async (req, res) => {
   try {
     const { name } = req.body;
 
@@ -41,7 +40,7 @@ router.post("/", auth, async (req, res) => {
 });
 
 // Update a category (admin only)
-router.put("/:id", auth, async (req, res) => {
+categoryRoutes.put("/:id", auth, async (req, res) => {
   try {
     const { name } = req.body;
 
@@ -63,7 +62,7 @@ router.put("/:id", auth, async (req, res) => {
 });
 
 // Delete a category (admin only)
-router.delete("/:id", auth, async (req, res) => {
+categoryRoutes.delete("/:id", auth, async (req, res) => {
   try {
     // Check if category exists
     const category = await Category.findById(req.params.id);
@@ -81,4 +80,4 @@ router.delete("/:id", auth, async (req, res) => {
   }
 });
 
-export default router;
+export default categoryRoutes;
