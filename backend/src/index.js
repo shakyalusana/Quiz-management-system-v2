@@ -10,6 +10,7 @@ import questionRoutes from "./routes/questions.js";
 import quizRoutes from "./routes/quizRoute.js";
 import playerRoutes from "./routes/playerRoute.js";
 import adminRoutes from "./routes/adminRoute.js";
+import recommendationRoutes from "./routes/recommendationRoutes.js";
 
 import protect from "./middleware/authMiddleware.js";
 
@@ -31,6 +32,7 @@ app.use("/api/questions", questionRoutes);
 app.use("/api/quiz", quizRoutes);
 app.use("/api/player", playerRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api", recommendationRoutes);
 
 // PLAYER ROUTE
 app.get("/api/player", protect, (req, res) => {

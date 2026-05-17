@@ -1,16 +1,13 @@
-import {
-  useCategories,
-  useCreateCategory,
-  useDeleteCategory,
-} from "@/hooks/useCategories";
+import { CATEGORYAPI } from "@/api/categoryApi";
 import { useState } from "react";
 import { toast } from "sonner";
 
 const AdminCategory = () => {
-  const { data: categories = [], isLoading } = useCategories();
+  const { data: categories = [], isLoading } = CATEGORYAPI.useCategories();
 
-  const createCategory = useCreateCategory();
-  const deleteCategory = useDeleteCategory();
+  const createCategory = CATEGORYAPI.useCreateCategory();
+
+  const deleteCategory = CATEGORYAPI.useDeleteCategory();
 
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
@@ -35,7 +32,7 @@ const AdminCategory = () => {
   };
 
   // DELETE CATEGORY
-  const handleDelete = async (id) => {
+  const handleDelete = async (id: string) => {
     try {
       await deleteCategory.mutateAsync(id);
       toast.success("Category deleted");

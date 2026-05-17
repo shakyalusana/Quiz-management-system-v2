@@ -1,95 +1,284 @@
-import { useState } from "react";
-import { Clock, ChevronRight, ChevronLeft, Flag } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Clock, ChevronRight, ChevronLeft } from "lucide-react";
+
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { CATEGORYAPI } from "@/api/categoryApi";
+import { QUIZAPI } from "@/api/quizApi";
 
-const question = {
-  number: 4,
-  total: 10,
-  category: "Programming",
-  text: "Which of the following is NOT a primitive type in JavaScript?",
-  options: [
-    { id: "a", text: "string" },
-    { id: "b", text: "number" },
-    { id: "c", text: "object" },
-    { id: "d", text: "boolean" },
-  ],
-};
+/* ---------------- LOBBY STATE ---------------- */
+
+interface Question {
+  _id: string;
+  text: string;
+  options: string[];
+  category: string;
+  difficulty: string;
+}
+
+interface Category {
+  _id: string;
+  name: string;
+}
 
 export default function PlayerQuiz() {
-  const [selected, setSelected] = useState<string>();
-  const progress = (question.number / question.total) * 100;
+  const { data: categories = [], isLoading: catLoading } =
+    CATEGORYAPI.useCategories();
+  const [questions, setQuestions] = useState<Question[]>([]);
+
+  const [current, setCurrent] = useState(0);
+  const [selected, setSelected] = useState<Record<number, string>>({});
+  const [loading, setLoading] = useState(false);
+
+  const [started, setStarted] = useState(false);
+
+  const [settings, setSettings] = useState({
+    categoryId: "",
+    difficulty: "medium",
+    count: 10,
+    time: 600, // seconds
+  });
+
+  const [timeLeft, setTimeLeft] = useState(settings.time);
+
+  const startQuizMutation = QUIZAPI.useStartQuiz();
+
+  const submitQuizMutation = QUIZAPI.useSubmitQuiz();
+  /* ---------------- FETCH QUIZ ---------------- */
+
+  const startQuiz = async () => {
+    try {
+      setLoading(true);
+
+      const data = await startQuizMutation.mutateAsync({
+        categoryId: settings.categoryId,
+        difficulty: settings.difficulty,
+        count: settings.count,
+      });
+
+      setQuestions(data);
+
+      setStarted(true);
+
+      setTimeLeft(settings.time);
+    } catch (err) {
+      console.error("Failed to start quiz", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+  /* ---------------- SUBMIT QUIZ ---------------- */
+
+  const handleSubmitQuiz = async () => {
+    try {
+      const answers = Object.entries(selected).map(([index, value]) => ({
+        questionId: questions[Number(index)]._id,
+        selectedOption: value,
+      }));
+
+      await submitQuizMutation.mutateAsync({
+        categoryId: settings.categoryId,
+
+        answers,
+
+        score: 0,
+
+        stats: {
+          total: questions.length,
+        },
+      });
+
+      alert("Quiz Submitted!");
+
+      setStarted(false);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    if (!started) return;
+
+    if (timeLeft <= 0) {
+      handleSubmitQuiz();
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setTimeLeft((t) => t - 1);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [started, timeLeft]);
+
+  /* ---------------- BLOCK BEFORE START ---------------- */
+
+  if (!started) {
+    return (
+      <div className="max-w-xl mx-auto p-6 space-y-4 border rounded-xl">
+        <h2 className="text-xl font-bold">Start Quiz</h2>
+
+        {/* CATEGORY */}
+        <select
+          className="w-full border p-2 rounded"
+          value={settings.categoryId}
+          onChange={(e) =>
+            setSettings({
+              ...settings,
+              categoryId: e.target.value,
+            })
+          }
+        >
+          <option value="">
+            {catLoading ? "Loading categories..." : "Select Category"}
+          </option>
+
+          {categories.map((cat: Category) => (
+            <option key={cat._id} value={cat._id}>
+              {cat.name}
+            </option>
+          ))}
+        </select>
+
+        {/* DIFFICULTY */}
+        <select
+          className="w-full border p-2 rounded"
+          value={settings.difficulty}
+          onChange={(e) =>
+            setSettings({
+              ...settings,
+              difficulty: e.target.value,
+            })
+          }
+        >
+          <option value="easy">Easy</option>
+          <option value="medium">Medium</option>
+          <option value="hard">Hard</option>
+        </select>
+
+        {/* QUESTION COUNT */}
+        <input
+          type="number"
+          className="w-full border p-2 rounded"
+          placeholder="Number of questions"
+          value={settings.count}
+          onChange={(e) =>
+            setSettings({
+              ...settings,
+              count: Number(e.target.value),
+            })
+          }
+        />
+
+        {/* TIMER */}
+        <input
+          type="number"
+          className="w-full border p-2 rounded"
+          placeholder="Time (seconds)"
+          value={settings.time}
+          onChange={(e) =>
+            setSettings({
+              ...settings,
+              time: Number(e.target.value),
+            })
+          }
+        />
+
+        <Button
+          onClick={startQuiz}
+          disabled={!settings.categoryId || catLoading}
+        >
+          Start Quiz
+        </Button>
+      </div>
+    );
+  }
+
+  /* ---------------- LOADING ---------------- */
+
+  if (loading) {
+    return <div className="p-6">Loading quiz...</div>;
+  }
+
+  if (!questions.length) {
+    return <div className="p-6">No questions found</div>;
+  }
+
+  const question = questions[current];
+  const progress = ((current + 1) / questions.length) * 100;
+
+  const next = () => {
+    if (current < questions.length - 1) {
+      setCurrent((p) => p + 1);
+    }
+  };
+
+  const prev = () => {
+    if (current > 0) {
+      setCurrent((p) => p - 1);
+    }
+  };
+
+  /* ---------------- QUIZ UI ---------------- */
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
+      {/* HEADER */}
       <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <Badge variant="outline">{question.category}</Badge>
-          <h1 className="text-xl font-semibold">JavaScript Deep Dive</h1>
-        </div>
-        <div className="flex items-center gap-2 rounded-lg border bg-card px-3 py-2 text-sm font-medium">
-          <Clock className="h-4 w-4 text-primary" />
-          <span>14:32</span>
-        </div>
-      </div>
+        <Badge>{question.category}</Badge>
 
-      <div className="space-y-2">
-        <div className="flex justify-between text-xs text-muted-foreground">
+        <div className="flex items-center gap-2 border px-3 py-2 rounded-lg">
+          <Clock className="w-4 h-4" />
           <span>
-            Question {question.number} of {question.total}
+            {Math.floor(timeLeft / 60)}:{timeLeft % 60}
           </span>
-          <span>{Math.round(progress)}%</span>
         </div>
-        <Progress value={progress} />
       </div>
 
-      <Card className="shadow-(--shadow-elegant)">
-        <CardHeader>
-          <h2 className="text-xl font-semibold leading-relaxed">
-            {question.text}
-          </h2>
-        </CardHeader>
+      {/* PROGRESS */}
+      <Progress value={progress} />
+
+      {/* QUESTION */}
+      <Card>
+        <CardHeader>{question.text}</CardHeader>
+
         <CardContent>
           <RadioGroup
-            value={selected}
-            onValueChange={setSelected}
-            className="gap-3"
+            value={selected[current] || ""}
+            onValueChange={(v) =>
+              setSelected({
+                ...selected,
+                [current]: v,
+              })
+            }
           >
-            {question.options.map((o) => (
-              <Label
-                key={o.id}
-                htmlFor={o.id}
-                className={`flex items-center gap-3 rounded-lg border p-4 cursor-pointer transition-all hover:border-primary/50 hover:bg-accent/5 ${
-                  selected === o.id ? "border-primary bg-primary/5" : ""
-                }`}
-              >
-                <RadioGroupItem value={o.id} id={o.id} />
-                <span className="text-sm font-medium uppercase text-muted-foreground">
-                  {o.id}.
-                </span>
-                <span className="text-base">{o.text}</span>
+            {question.options.map((opt, i) => (
+              <Label key={i} className="flex gap-2 border p-3 rounded">
+                <RadioGroupItem value={String(i)} />
+                {opt}
               </Label>
             ))}
           </RadioGroup>
         </CardContent>
       </Card>
 
-      <div className="flex justify-between gap-3">
-        <Button variant="outline">
-          <ChevronLeft className="h-4 w-4" /> Previous
+      {/* CONTROLS */}
+      <div className="flex justify-between">
+        <Button onClick={prev} disabled={current === 0}>
+          <ChevronLeft /> Prev
         </Button>
-        <div className="flex gap-2">
-          <Button variant="ghost">
-            <Flag className="h-4 w-4" /> Flag
+
+        {current === questions.length - 1 ? (
+          <Button onClick={handleSubmitQuiz}>Submit</Button>
+        ) : (
+          <Button onClick={next}>
+            Next <ChevronRight />
           </Button>
-          <Button>
-            Next <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
+        )}
       </div>
     </div>
   );

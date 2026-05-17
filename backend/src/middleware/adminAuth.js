@@ -1,7 +1,6 @@
 // middleware/adminAuth.js
-const User = require("../models/User");
-
-module.exports = async (req, res, next) => {
+import User from "../models/user.js";
+export default async (req, res, next) => {
   try {
     const user = await User.findById(req.user.userId);
 
