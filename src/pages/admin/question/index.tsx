@@ -1,15 +1,9 @@
 import { useState } from "react";
 import QuestionModal from "@/components/adminQuestionModel/questionModel";
 
-import {
-  useQuestions,
-  useCreateQuestion,
-  useUpdateQuestion,
-  useDeleteQuestion,
-} from "@/hooks/useQuestions";
-
-import { useCategories } from "@/hooks/useCategories";
 import { toast } from "sonner";
+import { QUESTIONAPI } from "@/api/questionApi";
+import { CATEGORYAPI } from "@/api/categoryApi";
 
 interface Question {
   _id: string;
@@ -29,12 +23,15 @@ interface QuestionFormData {
 }
 
 const AdminQuestion = () => {
-  const { data: questions = [], isLoading } = useQuestions();
-  const { data: categories = [] } = useCategories();
+  const { data: questions = [], isLoading } = QUESTIONAPI.useQuestions();
 
-  const createQuestion = useCreateQuestion();
-  const updateQuestion = useUpdateQuestion();
-  const deleteQuestion = useDeleteQuestion();
+  const { data: categories = [] } = CATEGORYAPI.useCategories();
+
+  const createQuestion = QUESTIONAPI.useCreateQuestion();
+
+  const updateQuestion = QUESTIONAPI.useUpdateQuestion();
+
+  const deleteQuestion = QUESTIONAPI.useDeleteQuestion();
 
   const [open, setOpen] = useState(false);
   const [selectedQuestion, setSelectedQuestion] = useState<

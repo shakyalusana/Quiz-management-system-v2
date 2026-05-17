@@ -1,37 +1,19 @@
 import { Trophy, Target, Zap, Award } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { QuizCard, type QuizSummary } from "../QuizCard";
+import { QuizCard } from "../QuizCard";
 import { StatCard } from "../common/StatCard";
+import { RECOMMENDATIONAPI } from "@/api/recommendationApi";
 
-const recommended: QuizSummary[] = [
-  {
-    id: "1",
-    title: "World Capitals Sprint",
-    category: "Geography",
-    difficulty: "Easy",
-    questions: 10,
-    durationMin: 5,
-  },
-  {
-    id: "2",
-    title: "JavaScript Deep Dive",
-    category: "Programming",
-    difficulty: "Hard",
-    questions: 20,
-    durationMin: 25,
-  },
-  {
-    id: "3",
-    title: "Renaissance Art",
-    category: "History",
-    difficulty: "Medium",
-    questions: 15,
-    durationMin: 12,
-  },
-];
+type RecommendedCategory = {
+  category: {
+    _id: string;
+    name: string;
+  };
+};
 
 export default function PlayerDashboard() {
+  const { data, isLoading } = RECOMMENDATIONAPI.useRecommendations();
   return (
     <div className="space-y-8">
       <div className="space-y-1">
@@ -83,10 +65,31 @@ export default function PlayerDashboard() {
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">Recommended for you</h2>
         </div>
+
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {recommended.map((q) => (
-            <QuizCard key={q.id} quiz={q} />
-          ))}
+          {isLoading ? (
+            <div className="text-sm text-muted-foreground">
+              Loading recommendations...
+            </div>
+          ) : data?.recommendedCategories?.length ? (
+            data.recommendedCategories.map((item: RecommendedCategory) => (
+              <QuizCard
+                key={item.category._id}
+                quiz={{
+                  id: item.category._id,
+                  title: `${item.category.name} Quiz`,
+                  category: item.category.name,
+                  difficulty: data.recommendedDifficulty,
+                  questions: 10,
+                  durationMin: 10,
+                }}
+              />
+            ))
+          ) : (
+            <div className="text-sm text-muted-foreground">
+              No recommendations yet. Play quizzes to personalize your feed.
+            </div>
+          )}
         </div>
       </section>
     </div>
