@@ -23,6 +23,10 @@ const userSchema = new mongoose.Schema(
       enum: ["player", "superadmin"],
       default: "player",
     },
+    rating: {
+      type: Number,
+      default: 1000,
+    },
   },
   {
     timestamps: true,

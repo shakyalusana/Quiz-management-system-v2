@@ -1,13 +1,12 @@
+// routes/player.js
 import express from "express";
-import auth from "../middleware/authMiddleware.js";
-import QuizResult from "../models/quiz.js";
-
-const playerRoutes = express.Router();
+import auth from "../middleware/auth.js";
+import QuizResult from "../models/QuizResult.js";
+const router = express.Router();
 
 // Get player's quiz history
-playerRoutes.get("/history", auth, async (req, res) => {
+router.get("/history", auth, async (req, res) => {
   try {
-    // req.user should contain userId from decoded token
     const quizResults = await QuizResult.find({ player: req.user.userId })
       .populate("category", "name")
       .sort("-date")
@@ -95,4 +94,4 @@ playerRoutes.get("/history", auth, async (req, res) => {
   }
 });
 
-export default playerRoutes;
+export default router;

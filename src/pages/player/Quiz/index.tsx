@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Clock, ChevronRight, ChevronLeft } from "lucide-react";
 
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { CATEGORYAPI } from "@/api/categoryApi";
 import { QUIZAPI } from "@/api/quizApi";
+import { Input } from "@/components/ui/input";
 
 /* ---------------- LOBBY STATE ---------------- */
 
@@ -73,7 +74,7 @@ export default function PlayerQuiz() {
   };
   /* ---------------- SUBMIT QUIZ ---------------- */
 
-  const handleSubmitQuiz = async () => {
+  const handleSubmitQuiz = useCallback(async () => {
     try {
       const answers = Object.entries(selected).map(([index, value]) => ({
         questionId: questions[Number(index)]._id,
@@ -98,14 +99,18 @@ export default function PlayerQuiz() {
     } catch (err) {
       console.error(err);
     }
-  };
+  }, [questions, selected, settings.categoryId, submitQuizMutation]);
 
   useEffect(() => {
     if (!started) return;
 
     if (timeLeft <= 0) {
-      handleSubmitQuiz();
-      return;
+      // avoid calling setState synchronously inside effect — defer submission
+      const t = setTimeout(() => {
+        handleSubmitQuiz();
+      }, 0);
+
+      return () => clearTimeout(t);
     }
 
     const timer = setInterval(() => {
@@ -113,7 +118,7 @@ export default function PlayerQuiz() {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [started, timeLeft]);
+  }, [handleSubmitQuiz, started, timeLeft]);
 
   /* ---------------- BLOCK BEFORE START ---------------- */
 
@@ -161,7 +166,7 @@ export default function PlayerQuiz() {
         </select>
 
         {/* QUESTION COUNT */}
-        <input
+        <Input
           type="number"
           className="w-full border p-2 rounded"
           placeholder="Number of questions"
@@ -175,7 +180,8 @@ export default function PlayerQuiz() {
         />
 
         {/* TIMER */}
-        <input
+
+        <Input
           type="number"
           className="w-full border p-2 rounded"
           placeholder="Time (seconds)"

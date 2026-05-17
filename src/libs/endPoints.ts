@@ -37,6 +37,15 @@ export const RECOMMENDATION_ENDPOINTS = {
   GET_RECOMMENDATIONS: `/recommendations`,
 } as const;
 
+export const HISTORY_ENDPOINTS = {
+  GET_HISTORY: `/player/history`,
+} as const;
+
+export const ADMIN_ENDPOINTS = {
+  DASHBOARD: "/admin/dashboard",
+  LEADERBOARD: "/admin/leaderboard",
+  PLAYERS: "/admin/players",
+} as const;
 /* ----------------------------------
    ALL ENDPOINTS
 -----------------------------------*/
@@ -46,6 +55,8 @@ export const API_ENDPOINTS = {
   CATEGORY: CATEGORY_ENDPOINTS,
   QUIZ: QUIZ_ENDPOINTS,
   RECOMMENDATION: RECOMMENDATION_ENDPOINTS,
+  HISTORY: HISTORY_ENDPOINTS,
+  ADMIN: ADMIN_ENDPOINTS,
 } as const;
 
 export default API_ENDPOINTS;

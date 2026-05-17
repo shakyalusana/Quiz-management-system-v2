@@ -1,7 +1,7 @@
-const mongoose = require("mongoose");
-const Question = require("../models/question");
+import mongoose from "mongoose";
+import Question from "../models/question.js";
 
-function fisherYatesShuffle(array) {
+export function fisherYatesShuffle(array) {
   const shuffled = [...array];
   for (let i = shuffled.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -27,11 +27,6 @@ function determineUserSkillLevel(userProfile) {
   }
 }
 
-/**
- * Get questions distribution based on user's skill level
- * @param {String} userSkillLevel - User's current skill level
- * @returns {Object} - Distribution of questions by difficulty
- */
 function getQuestionDistribution(userSkillLevel) {
   const distributions = {
     easy: { easy: 0.7, medium: 0.3, hard: 0 },
@@ -120,7 +115,7 @@ async function getRandomQuestions(categoryId, count, userProfile = null) {
   }
 }
 
-module.exports = {
+export default {
   getRandomQuestions,
   fisherYatesShuffle,
   // Export for testing
