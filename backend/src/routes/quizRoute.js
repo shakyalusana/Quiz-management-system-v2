@@ -43,7 +43,6 @@ quizRoutes.post("/questions", auth, async (req, res) => {
       options: question.options,
       difficulty: question.difficulty,
       category: question.category,
-      correctOption: question.options[question.correctOption], // Convert index to actual option value
     }));
 
     res.json(formattedQuestions);
@@ -70,23 +69,35 @@ quizRoutes.post("/submit", auth, async (req, res) => {
       });
     }
     const quizResult = new QuizResult({
-      player: req.user.userId,
+      player: req.user.id, // FIXED (see middleware fix below)
       category: categoryId,
-      score,
+      score: 0,
       totalQuestions: answers.length,
-      answers: answers.map((answer) => ({
-        question: answer.questionId,
-        selectedOption: answer.selectedOption,
-        isCorrect: answer.isCorrect,
-        points: answer.points,
-        difficulty: answer.difficulty,
-      })),
+
+      answers: await Promise.all(
+        answers.map(async (answer) => {
+          const question = await Question.findById(answer.questionId);
+
+          const isCorrect =
+            question.options[question.correctOption] === answer.selectedOption;
+
+          const points = isCorrect ? 10 : 0;
+
+          return {
+            question: answer.questionId,
+            selectedOption: answer.selectedOption,
+            isCorrect,
+            points,
+            difficulty: question.difficulty,
+          };
+        }),
+      ),
 
       stats,
     });
 
     await quizResult.save();
-    const user = await User.findById(req.user.userId);
+    const user = await User.findById(req.user.id);
 
     if (!user) {
       return res.status(404).json({

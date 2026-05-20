@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
-import { Clock, ChevronRight, ChevronLeft } from "lucide-react";
+import { Clock } from "lucide-react";
 
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { CATEGORYAPI } from "@/api/categoryApi";
@@ -19,6 +18,7 @@ interface Question {
   options: string[];
   category: string;
   difficulty: string;
+  correctOption?: string;
 }
 
 interface Category {
@@ -31,7 +31,6 @@ export default function PlayerQuiz() {
     CATEGORYAPI.useCategories();
   const [questions, setQuestions] = useState<Question[]>([]);
 
-  const [current, setCurrent] = useState(0);
   const [selected, setSelected] = useState<Record<number, string>>({});
   const [loading, setLoading] = useState(false);
 
@@ -62,7 +61,7 @@ export default function PlayerQuiz() {
       });
 
       setQuestions(data);
-
+      setSelected({});
       setStarted(true);
 
       setTimeLeft(settings.time);
@@ -76,31 +75,42 @@ export default function PlayerQuiz() {
 
   const handleSubmitQuiz = useCallback(async () => {
     try {
-      const answers = Object.entries(selected).map(([index, value]) => ({
-        questionId: questions[Number(index)]._id,
-        selectedOption: value,
-      }));
+      const answers = questions.map((question, index) => {
+        const selectedIndex = selected[index];
 
-      await submitQuizMutation.mutateAsync({
+        const selectedOption =
+          selectedIndex !== undefined
+            ? question.options[Number(selectedIndex)]
+            : null;
+
+        // ⚠️ since backend no longer sends correct answer,
+        // we cannot compute real correctness here
+        // so we send only selected data
+
+        return {
+          questionId: question._id,
+          // API expects a string for selectedOption; send empty string when none selected
+          selectedOption: selectedOption ?? "",
+        };
+      });
+
+      const payload = {
         categoryId: settings.categoryId,
-
         answers,
-
         score: 0,
-
         stats: {
           total: questions.length,
         },
-      });
+      };
+
+      await submitQuizMutation.mutateAsync(payload);
 
       alert("Quiz Submitted!");
-
       setStarted(false);
     } catch (err) {
       console.error(err);
     }
   }, [questions, selected, settings.categoryId, submitQuizMutation]);
-
   useEffect(() => {
     if (!started) return;
 
@@ -128,8 +138,9 @@ export default function PlayerQuiz() {
         <h2 className="text-xl font-bold">Start Quiz</h2>
 
         {/* CATEGORY */}
+        <Label className="text-sm font-medium">Category</Label>
         <select
-          className="w-full border p-2 rounded"
+          className="w-full border p-2 rounded border-border"
           value={settings.categoryId}
           onChange={(e) =>
             setSettings({
@@ -150,8 +161,9 @@ export default function PlayerQuiz() {
         </select>
 
         {/* DIFFICULTY */}
+        <Label className="text-sm font-medium">Difficulty</Label>
         <select
-          className="w-full border p-2 rounded"
+          className="w-full border p-2 rounded border-border"
           value={settings.difficulty}
           onChange={(e) =>
             setSettings({
@@ -166,6 +178,7 @@ export default function PlayerQuiz() {
         </select>
 
         {/* QUESTION COUNT */}
+        <Label className="text-sm font-medium">Question Count</Label>
         <Input
           type="number"
           className="w-full border p-2 rounded"
@@ -180,7 +193,7 @@ export default function PlayerQuiz() {
         />
 
         {/* TIMER */}
-
+        <Label className="text-sm font-medium">Time Limit (seconds)</Label>
         <Input
           type="number"
           className="w-full border p-2 rounded"
@@ -214,20 +227,7 @@ export default function PlayerQuiz() {
     return <div className="p-6">No questions found</div>;
   }
 
-  const question = questions[current];
-  const progress = ((current + 1) / questions.length) * 100;
-
-  const next = () => {
-    if (current < questions.length - 1) {
-      setCurrent((p) => p + 1);
-    }
-  };
-
-  const prev = () => {
-    if (current > 0) {
-      setCurrent((p) => p - 1);
-    }
-  };
+  /* ---------------- QUIZ UI ---------------- */
 
   /* ---------------- QUIZ UI ---------------- */
 
@@ -235,56 +235,83 @@ export default function PlayerQuiz() {
     <div className="max-w-3xl mx-auto space-y-6">
       {/* HEADER */}
       <div className="flex items-center justify-between">
-        <Badge>{question.category}</Badge>
-
         <div className="flex items-center gap-2 border px-3 py-2 rounded-lg">
           <Clock className="w-4 h-4" />
+
           <span>
-            {Math.floor(timeLeft / 60)}:{timeLeft % 60}
+            {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, "0")}
           </span>
+        </div>
+
+        <div className="text-sm text-muted-foreground">
+          {Object.keys(selected).length} / {questions.length} Answered
         </div>
       </div>
 
       {/* PROGRESS */}
-      <Progress value={progress} />
+      <Progress
+        value={(Object.keys(selected).length / questions.length) * 100}
+      />
 
-      {/* QUESTION */}
-      <Card>
-        <CardHeader>{question.text}</CardHeader>
+      {/* ALL QUESTIONS */}
+      <div className="space-y-6">
+        {questions.map((question, qIndex) => (
+          <Card key={question._id}>
+            <CardHeader>
+              <h2 className="font-semibold">
+                Q{qIndex + 1}. {question.text}
+              </h2>
+            </CardHeader>
 
-        <CardContent>
-          <RadioGroup
-            value={selected[current] || ""}
-            onValueChange={(v) =>
-              setSelected({
-                ...selected,
-                [current]: v,
-              })
-            }
-          >
-            {question.options.map((opt, i) => (
-              <Label key={i} className="flex gap-2 border p-3 rounded">
-                <RadioGroupItem value={String(i)} />
-                {opt}
-              </Label>
-            ))}
-          </RadioGroup>
-        </CardContent>
-      </Card>
+            <CardContent>
+              <RadioGroup
+                value={selected[qIndex] || ""}
+                onValueChange={(v) =>
+                  setSelected((prev) => ({
+                    ...prev,
+                    [qIndex]: v,
+                  }))
+                }
+              >
+                <div className="space-y-3">
+                  {question.options.map((opt, i) => {
+                    const optionId = `${question._id}-${i}`;
 
-      {/* CONTROLS */}
-      <div className="flex justify-between">
-        <Button onClick={prev} disabled={current === 0}>
-          <ChevronLeft /> Prev
+                    return (
+                      <div
+                        key={i}
+                        className={`flex items-center gap-3 border p-3 rounded-lg transition cursor-pointer ${
+                          selected[qIndex] === String(i)
+                            ? "border-primary bg-primary/10"
+                            : "hover:bg-muted"
+                        }`}
+                      >
+                        <RadioGroupItem id={optionId} value={String(i)} />
+
+                        <Label
+                          htmlFor={optionId}
+                          className="flex-1 cursor-pointer"
+                        >
+                          {opt}
+                        </Label>
+                      </div>
+                    );
+                  })}
+                </div>
+              </RadioGroup>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* SUBMIT BUTTON */}
+      <div className="flex justify-end">
+        <Button
+          onClick={handleSubmitQuiz}
+          disabled={submitQuizMutation.isPending}
+        >
+          {submitQuizMutation.isPending ? "Submitting..." : "Submit Quiz"}
         </Button>
-
-        {current === questions.length - 1 ? (
-          <Button onClick={handleSubmitQuiz}>Submit</Button>
-        ) : (
-          <Button onClick={next}>
-            Next <ChevronRight />
-          </Button>
-        )}
       </div>
     </div>
   );

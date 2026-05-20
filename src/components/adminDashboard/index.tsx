@@ -55,21 +55,28 @@ function AdminDashboard() {
         </CardHeader>
         <CardContent className="divide-y">
           {data?.recentPlayers?.length ? (
-            data.recentPlayers.map((r, i) => (
-              <div key={i} className="flex items-center justify-between py-3">
-                <div>
-                  <p className="font-medium">{r.name}</p>
-                  <p className="text-sm text-muted-foreground">Last activity</p>
-                </div>
+            data.recentPlayers.map(
+              (
+                r: { name: string; lastScore: number; lastQuizDate: string },
+                i: number,
+              ) => (
+                <div key={i} className="flex items-center justify-between py-3">
+                  <div>
+                    <p className="font-medium">{r.name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      Last activity
+                    </p>
+                  </div>
 
-                <div className="flex items-center gap-3">
-                  <Badge variant="outline">{r.lastScore}%</Badge>
-                  <span className="text-xs text-muted-foreground">
-                    {new Date(r.lastQuizDate).toLocaleString()}
-                  </span>
+                  <div className="flex items-center gap-3">
+                    <Badge variant="outline">{r.lastScore}%</Badge>
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(r.lastQuizDate).toLocaleString()}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            ))
+              ),
+            )
           ) : (
             <p className="text-sm text-muted-foreground py-4">
               No recent activity found

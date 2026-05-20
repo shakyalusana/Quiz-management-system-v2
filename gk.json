@@ -1,0 +1,202 @@
+[
+  {
+    "text": "What does HTML stand for?",
+    "options": [
+      "Hyper Text Markup Language",
+      "High Transfer Machine Language",
+      "Hyper Tool Multi Language",
+      "Home Text Markup Language"
+    ],
+    "correctOption": 0,
+    "difficulty": "easy",
+    "category": "6831790b163c0f028dd012c6"
+  },
+  {
+    "text": "Which company developed JavaScript?",
+    "options": ["Microsoft", "Netscape", "Google", "Oracle"],
+    "correctOption": 1,
+    "difficulty": "easy",
+    "category": "6831790b163c0f028dd012c6"
+  },
+  {
+    "text": "What does CSS stand for?",
+    "options": [
+      "Creative Style Sheets",
+      "Computer Style Sheets",
+      "Cascading Style Sheets",
+      "Colorful Style Sheets"
+    ],
+    "correctOption": 2,
+    "difficulty": "easy",
+    "category": "6831790b163c0f028dd012c6"
+  },
+  {
+    "text": "Which hook is used for state management in React?",
+    "options": ["useFetch", "useState", "useEffect", "useRoute"],
+    "correctOption": 1,
+    "difficulty": "easy",
+    "category": "6831790b163c0f028dd012c6"
+  },
+  {
+    "text": "Which database is commonly used with the MERN stack?",
+    "options": ["MySQL", "PostgreSQL", "MongoDB", "SQLite"],
+    "correctOption": 2,
+    "difficulty": "easy",
+    "category": "6831790b163c0f028dd012c6"
+  },
+  {
+    "text": "Which HTTP method is used to update data?",
+    "options": ["GET", "POST", "PUT", "FETCH"],
+    "correctOption": 2,
+    "difficulty": "medium",
+    "category": "6831790b163c0f028dd012c6"
+  },
+  {
+    "text": "Which keyword is used to declare a constant in JavaScript?",
+    "options": ["var", "let", "constant", "const"],
+    "correctOption": 3,
+    "difficulty": "easy",
+    "category": "6831790b163c0f028dd012c6"
+  },
+  {
+    "text": "What does API stand for?",
+    "options": [
+      "Application Programming Interface",
+      "Applied Program Internet",
+      "Advanced Programming Integration",
+      "Application Process Interface"
+    ],
+    "correctOption": 0,
+    "difficulty": "easy",
+    "category": "6831790b163c0f028dd012c6"
+  },
+  {
+    "text": "Which operator is used for strict equality in JavaScript?",
+    "options": ["==", "=", "===", "!="],
+    "correctOption": 2,
+    "difficulty": "medium",
+    "category": "6831790b163c0f028dd012c6"
+  },
+  {
+    "text": "Which command initializes a Node.js project?",
+    "options": ["node init", "npm start", "npm init", "node create"],
+    "correctOption": 2,
+    "difficulty": "easy",
+    "category": "6831790b163c0f028dd012c6"
+  },
+  {
+    "text": "What does JWT stand for?",
+    "options": [
+      "Java Web Token",
+      "JSON Web Token",
+      "JavaScript Web Transfer",
+      "JSON Wire Transfer"
+    ],
+    "correctOption": 1,
+    "difficulty": "medium",
+    "category": "6831790b163c0f028dd012c6"
+  },
+  {
+    "text": "Which CSS property is used to make text bold?",
+    "options": ["font-style", "font-weight", "text-bold", "font-size"],
+    "correctOption": 1,
+    "difficulty": "easy",
+    "category": "6831790b163c0f028dd012c6"
+  },
+  {
+    "text": "Which array method adds an item to the end of an array?",
+    "options": ["push()", "pop()", "shift()", "slice()"],
+    "correctOption": 0,
+    "difficulty": "easy",
+    "category": "6831790b163c0f028dd012c6"
+  },
+  {
+    "text": "Which method removes the last element from an array?",
+    "options": ["push()", "unshift()", "pop()", "splice()"],
+    "correctOption": 2,
+    "difficulty": "easy",
+    "category": "6831790b163c0f028dd012c6"
+  },
+  {
+    "text": "Which HTML tag is used to create a hyperlink?",
+    "options": ["<a>", "<p>", "<link>", "<href>"],
+    "correctOption": 0,
+    "difficulty": "easy",
+    "category": "6831790b163c0f028dd012c6"
+  },
+  {
+    "text": "Which property is used to change background color in CSS?",
+    "options": ["color", "background-color", "bgcolor", "background"],
+    "correctOption": 1,
+    "difficulty": "easy",
+    "category": "6831790b163c0f028dd012c6"
+  },
+  {
+    "text": "Which function prints output in JavaScript console?",
+    "options": ["console.log()", "print()", "echo()", "document.write()"],
+    "correctOption": 0,
+    "difficulty": "easy",
+    "category": "6831790b163c0f028dd012c6"
+  },
+  {
+    "text": "Which React hook is used for side effects?",
+    "options": ["useRef", "useEffect", "useState", "useMemo"],
+    "correctOption": 1,
+    "difficulty": "medium",
+    "category": "6831790b163c0f028dd012c6"
+  },
+  {
+    "text": "Which protocol is mainly used for secure websites?",
+    "options": ["HTTP", "HTTPS", "FTP", "SMTP"],
+    "correctOption": 1,
+    "difficulty": "easy",
+    "category": "6831790b163c0f028dd012c6"
+  },
+  {
+    "text": "Which symbol is used for IDs in CSS?",
+    "options": [".", "#", "*", "&"],
+    "correctOption": 1,
+    "difficulty": "easy",
+    "category": "6831790b163c0f028dd012c6"
+  },
+  {
+    "text": "What is the default display property of a div element?",
+    "options": ["inline", "block", "flex", "grid"],
+    "correctOption": 1,
+    "difficulty": "medium",
+    "category": "6831790b163c0f028dd012c6"
+  },
+  {
+    "text": "Which keyword is used to create a class in JavaScript?",
+    "options": ["function", "object", "class", "constructor"],
+    "correctOption": 2,
+    "difficulty": "medium",
+    "category": "6831790b163c0f028dd012c6"
+  },
+  {
+    "text": "Which method converts a JavaScript object into JSON string?",
+    "options": [
+      "JSON.parse()",
+      "JSON.stringify()",
+      "JSON.convert()",
+      "JSON.toObject()"
+    ],
+    "correctOption": 1,
+    "difficulty": "medium",
+    "category": "6831790b163c0f028dd012c6"
+  },
+  {
+    "text": "Which company created React?",
+    "options": ["Google", "Microsoft", "Facebook", "Amazon"],
+    "correctOption": 2,
+    "difficulty": "easy",
+    "category": "6831790b163c0f028dd012c6"
+  },
+  {
+    "text": "Which Node.js framework is commonly used for APIs?",
+    "options": ["Django", "Laravel", "Express", "Flask"],
+    "correctOption": 2,
+    "difficulty": "easy",
+    "category": "6831790b163c0f028dd012c6"
+  }
+]

@@ -2,15 +2,7 @@
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import {
-  Sparkles,
-  Eye,
-  EyeOff,
-  Loader2,
-  User,
-  Shield,
-  ArrowRight,
-} from "lucide-react";
+import { Sparkles, Eye, EyeOff, Loader2, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,7 +17,6 @@ type LoginFormData = z.infer<typeof loginSchema>;
 export default function LoginPage() {
   const { handleLogin, isLoggingIn } = useAuthHandler();
   const [showPassword, setShowPassword] = useState(false);
-  const [selectedRole, setSelectedRole] = useState("player");
 
   const {
     register,
@@ -55,40 +46,6 @@ export default function LoginPage() {
         <p className="text-muted-foreground">
           Sign in to continue your learning journey
         </p>
-      </div>
-
-      {/* Role Selection */}
-      <div className="grid grid-cols-2 gap-3">
-        <button
-          type="button"
-          onClick={() => setSelectedRole("player")}
-          className={`relative flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
-            selectedRole === "player"
-              ? "border-primary bg-primary/10 text-foreground"
-              : "border-border bg-card hover:border-muted-foreground/50 text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          <User className="h-5 w-5" />
-          <span className="text-sm font-medium">Player</span>
-          {selectedRole === "player" && (
-            <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-primary border-2 border-background" />
-          )}
-        </button>
-        <button
-          type="button"
-          onClick={() => setSelectedRole("admin")}
-          className={`relative flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
-            selectedRole === "admin"
-              ? "border-primary bg-primary/10 text-foreground"
-              : "border-border bg-card hover:border-muted-foreground/50 text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          <Shield className="h-5 w-5" />
-          <span className="text-sm font-medium">Admin</span>
-          {selectedRole === "admin" && (
-            <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-primary border-2 border-background" />
-          )}
-        </button>
       </div>
 
       {/* Form */}
@@ -158,25 +115,6 @@ export default function LoginPage() {
           )}
         </Button>
       </form>
-
-      {/* Demo Credentials */}
-      <div className="rounded-xl bg-card border border-border/50 p-4 space-y-3">
-        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-          Demo Accounts
-        </p>
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          <div className="space-y-1">
-            <p className="font-medium text-foreground">Admin</p>
-            <p className="text-muted-foreground text-xs">admin@quiz.com</p>
-            <p className="text-muted-foreground text-xs">admin123</p>
-          </div>
-          <div className="space-y-1">
-            <p className="font-medium text-foreground">Player</p>
-            <p className="text-muted-foreground text-xs">player@quiz.com</p>
-            <p className="text-muted-foreground text-xs">player123</p>
-          </div>
-        </div>
-      </div>
 
       {/* Sign up link */}
       <p className="text-center text-sm text-muted-foreground">
