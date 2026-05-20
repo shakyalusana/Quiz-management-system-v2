@@ -1,6 +1,6 @@
 import { Trophy, Target, Zap, Award } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
+// import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+// import { Progress } from "@/components/ui/progress";
 import { QuizCard } from "../QuizCard";
 import { StatCard } from "../common/StatCard";
 import { RECOMMENDATIONAPI } from "@/api/recommendationApi";
@@ -48,7 +48,7 @@ export default function PlayerDashboard() {
         <StatCard label="Badges" value={12} icon={Award} accent="success" />
       </div>
 
-      <Card>
+      {/* <Card>
         <CardHeader>
           <CardTitle>Level Progress</CardTitle>
         </CardHeader>
@@ -59,7 +59,7 @@ export default function PlayerDashboard() {
           </div>
           <Progress value={82} />
         </CardContent>
-      </Card>
+      </Card> */}
 
       <section className="space-y-4">
         <div className="flex items-center justify-between">
