@@ -1,0 +1,14 @@
+{
+  "name": "quiz-management-system",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"bun --cwd frontend dev\" \"bun --cwd backend dev\"",
+    "code": "bun run dev:all",
+    "dev:frontend": "bun --cwd frontend dev",
+    "dev:backend": "bun --cwd backend dev",
+    "dev:all": "bun run dev:frontend & bun run dev:backend"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
