@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+
 const quizSchema = new mongoose.Schema(
   {
     player: {
@@ -19,6 +20,7 @@ const quizSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+
     answers: [
       {
         question: {
@@ -27,9 +29,8 @@ const quizSchema = new mongoose.Schema(
           required: true,
         },
         selectedOption: {
-          type: String,
-          required: false,
-          default: null,
+          type: Number,
+          required: true,
         },
         isCorrect: {
           type: Boolean,
@@ -46,24 +47,14 @@ const quizSchema = new mongoose.Schema(
         },
       },
     ],
+
     stats: {
-      easy: {
-        correct: { type: Number, default: 0 },
-        total: { type: Number, default: 0 },
-      },
-      medium: {
-        correct: { type: Number, default: 0 },
-        total: { type: Number, default: 0 },
-      },
-      hard: {
-        correct: { type: Number, default: 0 },
-        total: { type: Number, default: 0 },
-      },
+      total: { type: Number, default: 0 },
+      correct: { type: Number, default: 0 },
+      wrong: { type: Number, default: 0 },
     },
   },
   { timestamps: true },
 );
 
-const QuizResult = mongoose.model("Quiz", quizSchema);
-
-export default QuizResult;
+export default mongoose.model("Quiz", quizSchema);

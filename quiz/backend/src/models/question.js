@@ -1,31 +1,21 @@
 import mongoose from "mongoose";
+
 const questionSchema = new mongoose.Schema(
   {
-    text: {
-      type: String,
-      required: true,
-      trim: true,
-    },
+    text: { type: String, required: true },
     options: {
       type: [String],
-      validate: [(arr) => arr.length >= 2, "At least 2 options are required"],
       required: true,
     },
     correctOption: {
       type: Number,
       required: true,
-      validate: {
-        validator: function (index) {
-          return this.options && index >= 0 && index < this.options.length;
-        },
-        message: "Correct option index is out of bounds",
-      },
     },
     difficulty: {
       type: String,
-      required: true,
       enum: ["easy", "medium", "hard"],
       default: "medium",
+      required: true,
     },
     category: {
       type: mongoose.Schema.Types.ObjectId,
@@ -36,6 +26,4 @@ const questionSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-const Question = mongoose.model("Question", questionSchema);
-
-export default Question;
+export default mongoose.model("Question", questionSchema);
