@@ -1,136 +1,115 @@
 import express from "express";
-import QuizResult from "../models/quiz.js";
+import Quiz from "../models/quiz.js";
+import QuizAudit from "../models/quizAudit.js";
 import Question from "../models/question.js";
-import Category from "../models/category.js";
 import auth from "../middleware/authMiddleware.js";
 import { fisherYatesShuffle } from "../utils/randomizer.js";
-import { calculateEloRating } from "../utils/eloRating.js";
-import User from "../models/user.js";
 
 const quizRoutes = express.Router();
 
-// Get questions for quiz
+/* ---------------- GET QUESTIONS ---------------- */
 quizRoutes.post("/questions", auth, async (req, res) => {
   try {
     const { categoryId, difficulty = "medium", count = 10 } = req.body;
 
-    if (!categoryId) {
-      return res.status(400).json({ message: "Category ID is required" });
-    }
-
-    // Get questions matching the category and difficulty
     const questions = await Question.find({
       category: categoryId,
-      difficulty: difficulty,
+      difficulty,
     }).lean();
 
-    if (!questions || questions.length === 0) {
-      return res.status(404).json({
-        message: `No questions available for this category with ${difficulty} difficulty`,
-      });
+    if (!questions.length) {
+      return res.status(404).json({ message: "No questions found" });
     }
 
-    // Shuffle the questions and limit to requested count
-    const shuffledQuestions = fisherYatesShuffle(questions).slice(
-      0,
-      Math.min(count, questions.length),
-    );
+    const shuffled = fisherYatesShuffle(questions).slice(0, count);
 
-    // Map questions to include only necessary fields and convert correctOption to actual value
-    const formattedQuestions = shuffledQuestions.map((question) => ({
-      _id: question._id,
-      text: question.text,
-      options: question.options,
-      difficulty: question.difficulty,
-      category: question.category,
+    const formatted = shuffled.map((q) => ({
+      _id: q._id,
+      text: q.text,
+      options: q.options,
+      correctOption: q.correctOption, // optional for frontend review
     }));
 
-    res.json(formattedQuestions);
+    res.json(formatted);
   } catch (err) {
-    console.error("Error fetching quiz questions:", err);
-    res.status(500).json({ message: "Error fetching quiz questions" });
+    res.status(500).json({ message: "Server error" });
   }
 });
 
-// Submit quiz results
+/* ---------------- SUBMIT QUIZ ---------------- */
 quizRoutes.post("/submit", auth, async (req, res) => {
   try {
-    const { categoryId, answers, score, stats, difficulty } = req.body;
-    if (!categoryId || !answers || score === undefined) {
-      return res.status(400).json({
-        message: "Missing required fields",
-      });
-    }
-    const category = await Category.findById(categoryId);
+    const { categoryId, answers, difficulty } = req.body;
 
-    if (!category) {
-      return res.status(404).json({
-        message: "Category not found",
-      });
-    }
-    const quizResult = new QuizResult({
-      player: req.user.id, // FIXED (see middleware fix below)
-      category: categoryId,
-      score: 0,
-      totalQuestions: answers.length,
-
-      answers: await Promise.all(
-        answers.map(async (answer) => {
-          const question = await Question.findById(answer.questionId);
-
-          const isCorrect =
-            question.options[question.correctOption] === answer.selectedOption;
-
-          const points = isCorrect ? 10 : 0;
-
-          return {
-            question: answer.questionId,
-            selectedOption: answer.selectedOption,
-            isCorrect,
-            points,
-            difficulty: question.difficulty,
-          };
-        }),
-      ),
-
-      stats,
+    const questions = await Question.find({
+      _id: { $in: answers.map((a) => a.questionId) },
     });
 
-    await quizResult.save();
-    const user = await User.findById(req.user.id);
+    let correct = 0;
 
-    if (!user) {
-      return res.status(404).json({
-        message: "User not found",
-      });
-    }
+    const detailedAnswers = answers.map((a) => {
+      const question = questions.find((q) => q._id.toString() === a.questionId);
 
-    const eloResult = calculateEloRating({
-      currentRating: user.rating,
-      quizDifficulty: difficulty || "medium",
+      const isCorrect = question.correctOption === Number(a.selectedOption);
+
+      if (isCorrect) correct++;
+
+      return {
+        question: question._id,
+        selectedOption: Number(a.selectedOption),
+        isCorrect,
+        points: isCorrect ? 10 : 0,
+
+        // 🔥 FIX THAT CAUSED YOUR ERROR
+        difficulty: question.difficulty,
+      };
+    });
+
+    const score = correct * 10;
+
+    // ---------------- SAVE QUIZ ----------------
+    const quiz = await Quiz.create({
+      player: req.user.id,
+      category: categoryId,
       score,
       totalQuestions: answers.length,
+      answers: detailedAnswers,
+      stats: {
+        correct,
+        wrong: answers.length - correct,
+        total: answers.length,
+      },
     });
 
-    user.rating = eloResult.newRating;
+    // ---------------- AUDIT LOG ----------------
+    await QuizAudit.create({
+      quizId: quiz._id,
+      user: req.user.id,
+      category: categoryId,
+      score,
+      totalQuestions: answers.length,
 
-    await user.save();
+      audit: answers.map((a) => {
+        const q = questions.find((x) => x._id.toString() === a.questionId);
 
-    res.status(201).json({
-      message: "Quiz results submitted successfully",
-      elo: eloResult,
-      currentRating: user.rating,
-      results: quizResult.answers.map((a) => ({
-        questionId: a.question,
-        isCorrect: a.isCorrect,
-        selectedOption: a.selectedOption,
-      })),
+        return {
+          questionId: q._id,
+          selectedOption: Number(a.selectedOption),
+          correctOption: q.correctOption,
+          isCorrect: q.correctOption === Number(a.selectedOption),
+          difficulty: q.difficulty,
+        };
+      }),
     });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({
-      message: "Server error",
+
+    res.json({
+      score,
+      correct,
+      wrong: answers.length - correct,
     });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
   }
 });
 

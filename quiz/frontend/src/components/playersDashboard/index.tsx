@@ -1,6 +1,6 @@
 import { Trophy, Target, Zap, Award } from "lucide-react";
-// import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-// import { Progress } from "@/components/ui/progress";
+import { motion } from "framer-motion";
+
 import { QuizCard } from "../QuizCard";
 import { StatCard } from "../common/StatCard";
 import { RECOMMENDATIONAPI } from "@/api/recommendationApi";
@@ -14,57 +14,80 @@ type RecommendedCategory = {
 
 export default function PlayerDashboard() {
   const { data, isLoading } = RECOMMENDATIONAPI.useRecommendations();
+
+  const stats: Array<{
+    label: string;
+    value: string | number;
+    icon: typeof Trophy;
+    accent: "primary" | "accent" | "warning" | "success";
+    trend?: string;
+  }> = [
+    {
+      label: "Total Score",
+      value: "4,820",
+      icon: Trophy,
+      accent: "primary",
+      trend: "+320 this week",
+    },
+    {
+      label: "Accuracy",
+      value: "78%",
+      icon: Target,
+      accent: "accent",
+      trend: "+4% vs last",
+    },
+    {
+      label: "Streak",
+      value: "7",
+      icon: Zap,
+      accent: "warning",
+      trend: "Personal best!",
+    },
+    {
+      label: "Badges",
+      value: 12,
+      icon: Award,
+      accent: "success",
+    },
+  ];
+
   return (
-    <div className="space-y-8">
-      <div className="space-y-1">
+    <div className="space-y-10">
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
         <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
         <p className="text-muted-foreground text-sm">
           Your quiz progress at a glance.
         </p>
-      </div>
+      </motion.div>
 
+      {/* Stats */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          label="Total Score"
-          value="4,820"
-          icon={Trophy}
-          accent="primary"
-          trend="+320 this week"
-        />
-        <StatCard
-          label="Accuracy"
-          value="78%"
-          icon={Target}
-          accent="accent"
-          trend="+4% vs last"
-        />
-        <StatCard
-          label="Streak"
-          value="7"
-          icon={Zap}
-          accent="warning"
-          trend="Personal best!"
-        />
-        <StatCard label="Badges" value={12} icon={Award} accent="success" />
+        {stats.map((s, i) => (
+          <motion.div
+            key={s.label}
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.08 }}
+            whileHover={{ y: -5, scale: 1.02 }}
+          >
+            <StatCard {...s} />
+          </motion.div>
+        ))}
       </div>
 
-      {/* <Card>
-        <CardHeader>
-          <CardTitle>Level Progress</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          <div className="flex justify-between text-sm">
-            <span className="font-medium">Level 8 — Quiz Apprentice</span>
-            <span className="text-muted-foreground">820 / 1,000 XP</span>
-          </div>
-          <Progress value={82} />
-        </CardContent>
-      </Card> */}
-
-      <section className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Recommended for you</h2>
-        </div>
+      {/* Recommendations */}
+      <section className="space-y-5">
+        <motion.h2
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-lg font-semibold"
+        >
+          Recommended for you
+        </motion.h2>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {isLoading ? (
@@ -72,19 +95,28 @@ export default function PlayerDashboard() {
               Loading recommendations...
             </div>
           ) : data?.recommendedCategories?.length ? (
-            data.recommendedCategories.map((item: RecommendedCategory) => (
-              <QuizCard
-                key={item.category._id}
-                quiz={{
-                  id: item.category._id,
-                  title: `${item.category.name} Quiz`,
-                  category: item.category.name,
-                  difficulty: data.recommendedDifficulty,
-                  questions: 10,
-                  durationMin: 10,
-                }}
-              />
-            ))
+            data.recommendedCategories.map(
+              (item: RecommendedCategory, i: number) => (
+                <motion.div
+                  key={item.category._id}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: i * 0.06 }}
+                  whileHover={{ scale: 1.03 }}
+                >
+                  <QuizCard
+                    quiz={{
+                      id: item.category._id,
+                      title: `${item.category.name} Quiz`,
+                      category: item.category.name,
+                      difficulty: data.recommendedDifficulty,
+                      questions: 10,
+                      durationMin: 10,
+                    }}
+                  />
+                </motion.div>
+              ),
+            )
           ) : (
             <div className="text-sm text-muted-foreground">
               No recommendations yet. Play quizzes to personalize your feed.

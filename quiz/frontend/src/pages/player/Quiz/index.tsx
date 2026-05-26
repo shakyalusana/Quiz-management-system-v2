@@ -1,22 +1,20 @@
-import { useCallback, useEffect, useState } from "react";
-import { Clock } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Clock, Trophy, CheckCircle2, XCircle } from "lucide-react";
 
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Input } from "@/components/ui/input";
+
 import { CATEGORYAPI } from "@/api/categoryApi";
 import { QUIZAPI } from "@/api/quizApi";
-import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface Question {
   _id: string;
   text: string;
   options: string[];
-  category: string;
-  difficulty: string;
-  correctOption?: number;
+  correctOption: number;
 }
 
 interface Category {
@@ -25,16 +23,17 @@ interface Category {
 }
 
 export default function PlayerQuiz() {
-  const { data: categories = [], isLoading: catLoading } =
-    CATEGORYAPI.useCategories();
+  const { data: categories = [] } = CATEGORYAPI.useCategories();
+  const startQuizMutation = QUIZAPI.useStartQuiz();
+  const submitQuizMutation = QUIZAPI.useSubmitQuiz();
 
   const [questions, setQuestions] = useState<Question[]>([]);
-  const [selected, setSelected] = useState<Record<number, string>>({});
-
-  const [loading, setLoading] = useState(false);
   const [started, setStarted] = useState(false);
-
   const [showResults, setShowResults] = useState(false);
+
+  const [selected, setSelected] = useState<Record<string, number>>({});
+  const [score, setScore] = useState(0);
+  const [loading, setLoading] = useState(false);
 
   const [settings, setSettings] = useState({
     categoryId: "",
@@ -42,42 +41,41 @@ export default function PlayerQuiz() {
     count: 10,
   });
 
-  const calculateTime = (difficulty: string, count: number) => {
-    let baseMinutes = 5;
+  /* ---------------- TIMER ---------------- */
+  const initialTime = useMemo(() => {
+    return settings.difficulty === "easy"
+      ? 120
+      : settings.difficulty === "hard"
+        ? 600
+        : 300;
+  }, [settings.difficulty]);
 
-    if (difficulty === "easy") baseMinutes = 2;
-    if (difficulty === "medium") baseMinutes = 5;
-    if (difficulty === "hard") baseMinutes = 10;
-
-    const extraMinutes = count > 10 ? count - 10 : 0;
-
-    return (baseMinutes + extraMinutes) * 60;
-  };
-
-  const [timeLeft, setTimeLeft] = useState(
-    calculateTime(settings.difficulty, settings.count),
-  );
-
-  const startQuizMutation = QUIZAPI.useStartQuiz();
-  const submitQuizMutation = QUIZAPI.useSubmitQuiz();
+  const [timeLeft, setTimeLeft] = useState(initialTime);
 
   /* ---------------- START QUIZ ---------------- */
+
   const startQuiz = async () => {
+    if (!settings.categoryId) return;
+
     try {
       setLoading(true);
 
-      const data = await startQuizMutation.mutateAsync({
+      const res = await startQuizMutation.mutateAsync({
         categoryId: settings.categoryId,
         difficulty: settings.difficulty,
         count: settings.count,
       });
 
-      setQuestions(data);
-      setSelected({});
-      setStarted(true);
-      setShowResults(false);
+      const questionsData = Array.isArray(res)
+        ? res
+        : res?.data || res?.questions || [];
 
-      setTimeLeft(calculateTime(settings.difficulty, settings.count));
+      setQuestions(questionsData);
+      setSelected({});
+      setScore(0);
+      setShowResults(false);
+      setStarted(true);
+      setTimeLeft(initialTime);
     } catch (err) {
       console.error(err);
     } finally {
@@ -85,102 +83,76 @@ export default function PlayerQuiz() {
     }
   };
 
-  /* ---------------- SUBMIT QUIZ ---------------- */
-  const handleSubmitQuiz = useCallback(async () => {
-    try {
-      const answers = questions.map((q, i) => {
-        const selectedIndex = selected[i];
+  /* ---------------- SCORE ---------------- */
+  const calculateScore = useCallback(() => {
+    return questions.reduce((acc, q) => {
+      return selected[q._id] === q.correctOption ? acc + 1 : acc;
+    }, 0);
+  }, [questions, selected]);
 
-        return {
-          questionId: q._id,
-          selectedOption:
-            selectedIndex !== undefined ? q.options[Number(selectedIndex)] : "",
-        };
-      });
+  /* ---------------- SUBMIT ---------------- */
+  const submitQuiz = useCallback(async () => {
+    if (!questions.length) return;
 
-      const payload = {
-        categoryId: settings.categoryId,
-        difficulty: settings.difficulty,
-        score: questions.reduce((acc, q, i) => {
-          const selectedIndex = selected[i];
-          return selectedIndex !== undefined &&
-            q.correctOption !== undefined &&
-            Number(selectedIndex) === q.correctOption
-            ? acc + 1
-            : acc;
-        }, 0),
-        answers,
-        stats: {
-          total: questions.length,
-        },
-      };
+    const finalScore = calculateScore();
+    setScore(finalScore);
 
-      await submitQuizMutation.mutateAsync(payload);
+    await submitQuizMutation.mutateAsync({
+      categoryId: settings.categoryId,
+      answers: questions.map((q) => ({
+        questionId: q._id,
+        selectedOption: selected[q._id] ?? -1,
+      })),
+      score: finalScore,
+    });
 
-      setShowResults(true);
-    } catch (err) {
-      console.error(err);
-    }
-  }, [questions, selected, settings, submitQuizMutation]);
+    setShowResults(true);
+    setStarted(false);
+  }, [
+    questions,
+    calculateScore,
+    submitQuizMutation,
+    settings.categoryId,
+    selected,
+  ]);
 
   /* ---------------- TIMER ---------------- */
   useEffect(() => {
     if (!started || showResults) return;
 
-    if (timeLeft <= 0) {
-      const timeoutId = window.setTimeout(() => {
-        handleSubmitQuiz();
-      }, 0);
-
-      return () => window.clearTimeout(timeoutId);
-      return;
-    }
-
     const timer = setInterval(() => {
-      setTimeLeft((t) => t - 1);
+      setTimeLeft((t) => {
+        if (t <= 1) {
+          clearInterval(timer);
+          submitQuiz();
+          return 0;
+        }
+        return t - 1;
+      });
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [timeLeft, started, showResults, handleSubmitQuiz]);
+  }, [started, showResults, submitQuiz]);
 
-  /* ---------------- BLOCK BACK / REFRESH ---------------- */
-  useEffect(() => {
-    if (!started) return;
+  const progress =
+    (Object.keys(selected).length / (questions.length || 1)) * 100;
 
-    const handlePopState = () => {
-      window.history.pushState(null, "", window.location.href);
-    };
-
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      e.preventDefault();
-      e.returnValue = "";
-    };
-
-    window.history.pushState(null, "", window.location.href);
-
-    window.addEventListener("popstate", handlePopState);
-    window.addEventListener("beforeunload", handleBeforeUnload);
-
-    return () => {
-      window.removeEventListener("popstate", handlePopState);
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-    };
-  }, [started]);
+  /* ---------------- START SCREEN ---------------- */
 
   if (loading) {
     return (
-      <div className="max-w-xl mx-auto p-6 space-y-4 border rounded-xl">
-        <h2 className="text-xl font-bold">Loading Quiz...</h2>
+      <div className="max-w-xl mx-auto p-6 rounded-2xl border shadow space-y-4 text-center">
+        <h1 className="text-xl font-bold">Loading Quiz...</h1>
+        <p className="text-muted-foreground">Preparing your challenge</p>
       </div>
     );
   }
-  /* ---------------- START SCREEN ---------------- */
-  if (!started) {
+  if (!started && !showResults) {
     return (
-      <div className="max-w-xl mx-auto p-6 space-y-4 border rounded-xl">
-        <h2 className="text-xl font-bold">Start Quiz</h2>
+      <div className="max-w-xl mx-auto p-6 rounded-2xl border shadow space-y-4">
+        <h1 className="text-xl font-bold">Quiz Arena</h1>
 
-        <Label>Category</Label>
+        <Label className="text-sm text-muted-foreground">Select Category</Label>
         <select
           className="w-full border p-2 rounded"
           value={settings.categoryId}
@@ -188,10 +160,7 @@ export default function PlayerQuiz() {
             setSettings({ ...settings, categoryId: e.target.value })
           }
         >
-          <option value="">
-            {catLoading ? "Loading..." : "Select Category"}
-          </option>
-
+          <option value="">Select Category</option>
           {categories.map((c: Category) => (
             <option key={c._id} value={c._id}>
               {c.name}
@@ -199,7 +168,9 @@ export default function PlayerQuiz() {
           ))}
         </select>
 
-        <Label>Difficulty</Label>
+        <Label className="text-sm text-muted-foreground">
+          Select Difficulty
+        </Label>
         <select
           className="w-full border p-2 rounded"
           value={settings.difficulty}
@@ -212,7 +183,9 @@ export default function PlayerQuiz() {
           <option value="hard">Hard</option>
         </select>
 
-        <Label>Question Count</Label>
+        <Label className="text-sm text-muted-foreground">
+          Number of Questions
+        </Label>
         <Input
           type="number"
           value={settings.count}
@@ -221,96 +194,135 @@ export default function PlayerQuiz() {
           }
         />
 
-        <Button onClick={startQuiz} disabled={!settings.categoryId}>
-          Start Quiz
+        <Button onClick={startQuiz} className="w-full">
+          Start Challenge
         </Button>
       </div>
     );
   }
 
-  /* ---------------- QUIZ SCREEN ---------------- */
-  return (
-    <div className="max-w-3xl mx-auto space-y-6">
-      {/* HEADER */}
-      <div className="flex justify-between items-center">
-        <div className="flex items-center gap-2 border px-3 py-2 rounded-lg">
-          <Clock className="w-4 h-4" />
-          <span>
-            {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, "0")}
-          </span>
+  /* ---------------- RESULTS SCREEN ---------------- */
+  if (showResults) {
+    return (
+      <div className="max-w-3xl mx-auto p-6 space-y-6">
+        <div className="text-center border rounded-2xl p-6 shadow">
+          <Trophy className="mx-auto text-yellow-500 w-10 h-10 mb-2" />
+          <h2 className="text-xl font-bold">Results</h2>
+
+          <p className="mt-2 text-lg">
+            Score: <b>{score}</b> / {questions.length}
+          </p>
+
+          <p className="text-sm text-gray-500">
+            Accuracy: {Math.round((score / questions.length) * 100)}%
+          </p>
+
+          <Button
+            className="mt-4"
+            onClick={() => {
+              setStarted(false);
+              setShowResults(false);
+            }}
+          >
+            Play Again
+          </Button>
         </div>
 
-        <div>
-          {Object.keys(selected).length}/{questions.length} Answered
-        </div>
-      </div>
+        {/* REVIEW SECTION */}
+        <div className="space-y-4">
+          {questions.map((q) => {
+            const userAnswer = selected[q._id];
 
-      <Progress
-        value={(Object.keys(selected).length / questions.length) * 100}
-      />
+            return (
+              <Card key={q._id} className="p-4 space-y-2">
+                <div className="font-semibold">{q.text}</div>
 
-      {/* QUESTIONS */}
-      {questions.map((q, qIndex) => (
-        <Card key={q._id}>
-          <CardHeader>
-            <h2 className="font-semibold">
-              Q{qIndex + 1}. {q.text}
-            </h2>
-          </CardHeader>
-
-          <CardContent>
-            <RadioGroup
-              disabled={showResults}
-              value={selected[qIndex] || ""}
-              onValueChange={(v) => setSelected((p) => ({ ...p, [qIndex]: v }))}
-            >
-              <div className="space-y-3">
                 {q.options.map((opt, i) => {
-                  const isSelected = selected[qIndex] === String(i);
-                  const isCorrect = q.correctOption === i;
+                  const isUser = userAnswer === i;
+                  const isRight = q.correctOption === i;
 
                   return (
                     <div
                       key={i}
-                      className={`flex items-center gap-3 border p-3 rounded-lg transition ${
-                        showResults
-                          ? isCorrect
-                            ? "border-green-500 bg-green-100 dark:bg-green-900/40"
-                            : isSelected
-                              ? "border-red-500 bg-red-100 dark:bg-red-900/40"
+                      className={`p-2 rounded border flex items-center justify-between
+                        ${
+                          isRight
+                            ? "bg-green-100 border-green-500 text-green-600"
+                            : isUser
+                              ? "bg-red-100 border-red-500 text-red-600"
                               : ""
-                          : isSelected
-                            ? "border-lime-500 bg-lime-100 dark:bg-lime-900/40"
-                            : "hover:bg-muted"
-                      }`}
+                        }`}
                     >
-                      <RadioGroupItem value={String(i)} id={`${q._id}-${i}`} />
+                      {opt}
 
-                      <Label htmlFor={`${q._id}-${i}`} className="flex-1">
-                        {opt}
-                      </Label>
+                      {isRight && <CheckCircle2 className="text-green-600" />}
+                      {isUser && !isRight && (
+                        <XCircle className="text-red-600" />
+                      )}
                     </div>
                   );
                 })}
-              </div>
-            </RadioGroup>
-          </CardContent>
-        </Card>
-      ))}
-
-      {/* SUBMIT */}
-      {!showResults && (
-        <div className="flex justify-end">
-          <Button onClick={handleSubmitQuiz}>Submit Quiz</Button>
+              </Card>
+            );
+          })}
         </div>
-      )}
+      </div>
+    );
+  }
 
-      {/* RESULT DONE */}
-      {showResults && (
-        <div className="text-center p-4 border rounded-lg bg-muted">
-          Quiz Completed! Results shown above
+  /* ---------------- QUIZ SCREEN (ALL QUESTIONS) ---------------- */
+  return (
+    <div className="max-w-3xl mx-auto space-y-6">
+      {/* TOP BAR */}
+      <div className="flex justify-between items-center p-3 border rounded-xl">
+        <div className="flex items-center gap-2">
+          <Clock size={16} />
+          {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, "0")}
         </div>
-      )}
+
+        <div>Answered: {Object.keys(selected).length}</div>
+      </div>
+
+      <Progress value={progress} />
+
+      {/* ALL QUESTIONS */}
+      <div className="space-y-6">
+        {questions.map((q) => (
+          <Card key={q._id} className="p-5 space-y-3">
+            <h2 className="font-semibold">{q.text}</h2>
+
+            <div className="space-y-2">
+              {q.options.map((opt, i) => {
+                const isSelected = selected[q._id] === i;
+
+                return (
+                  <div
+                    key={i}
+                    onClick={() =>
+                      setSelected((prev) => ({
+                        ...prev,
+                        [q._id]: i,
+                      }))
+                    }
+                    className={`p-3 border rounded-lg cursor-pointer transition
+                      ${
+                        isSelected
+                          ? "bg-green-100 border-green-500 text-green-600"
+                          : "hover:bg-gray-100 text-gray-700"
+                      }`}
+                  >
+                    {opt}
+                  </div>
+                );
+              })}
+            </div>
+          </Card>
+        ))}
+      </div>
+
+      <Button onClick={submitQuiz} className="w-full">
+        Finish Quiz
+      </Button>
     </div>
   );
 }

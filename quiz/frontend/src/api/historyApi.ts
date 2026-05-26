@@ -1,31 +1,34 @@
 import { useQuery } from "@tanstack/react-query";
-
 import API from "@/request/request";
 import API_ENDPOINTS from "@/libs/endPoints";
 
 export const historyKeys = {
   all: ["history"] as const,
+  list: () => [...historyKeys.all, "list"] as const,
+  detail: (id: string) => [...historyKeys.all, "detail", id] as const,
+};
 
-  history: () => [...historyKeys.all, "history"] as const,
-} as const;
+const getHistory = async () => {
+  const { data } = await API.get(API_ENDPOINTS.HISTORY.GET_HISTORY);
+  return data;
+};
 
-const historyAPI = {
-  getHistory: async () => {
-    const { data } = await API.get(API_ENDPOINTS.HISTORY.GET_HISTORY);
-    return data;
-  },
-} as const;
-
-const usePlayerHistory = () => {
-  return useQuery({
-    queryKey: historyKeys.history(),
-    queryFn: historyAPI.getHistory,
-    meta: {
-      errorMessage: "Failed to fetch player history",
-    },
-  });
+const getAuditById = async (id: string) => {
+  const { data } = await API.get(`/history/${id}`);
+  return data;
 };
 
 export const HISTORYAPI = {
-  usePlayerHistory,
-} as const;
+  usePlayerHistory: () =>
+    useQuery({
+      queryKey: historyKeys.list(),
+      queryFn: getHistory,
+    }),
+
+  useQuizAudit: (id: string) =>
+    useQuery({
+      queryKey: historyKeys.detail(id),
+      queryFn: () => getAuditById(id),
+      enabled: !!id,
+    }),
+};
