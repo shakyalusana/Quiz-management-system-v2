@@ -1,15 +1,16 @@
 import Quiz from "../models/quiz.js";
 
 export const collaborativeFiltering = async (userId) => {
-  const userData = await Quiz.find({ player: userId });
+  const userData = await Quiz.find({ player: userId }).populate("category");
 
   const others = await Quiz.find({ player: { $ne: userId } }).populate(
     "category player",
   );
 
   const userVector = {};
+
   userData.forEach((q) => {
-    const id = q.category.toString();
+    const id = q.category._id.toString();
     userVector[id] = (userVector[id] || 0) + q.score;
   });
 
@@ -40,9 +41,7 @@ export const collaborativeFiltering = async (userId) => {
 
     const sim = dot / (Math.sqrt(a) * Math.sqrt(b));
 
-    if (sim) {
-      similarity.push({ uid, sim, vector });
-    }
+    if (sim) similarity.push({ uid, sim, vector });
   }
 
   similarity.sort((a, b) => b.sim - a.sim);
@@ -59,8 +58,20 @@ export const collaborativeFiltering = async (userId) => {
     });
   });
 
+  // 🔥 FIX: convert IDs → real categories
+  const categories = await Quiz.find().populate("category");
+
+  const categoryMap = {};
+  categories.forEach((q) => {
+    categoryMap[q.category._id.toString()] = q.category;
+  });
+
   const recommendations = Object.entries(recMap)
-    .map(([cat, score]) => ({ category: cat, score }))
+    .map(([catId, score]) => ({
+      category: categoryMap[catId],
+      score,
+    }))
+    .filter((r) => r.category)
     .sort((a, b) => b.score - a.score);
 
   return {
