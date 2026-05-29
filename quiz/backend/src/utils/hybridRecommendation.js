@@ -7,20 +7,30 @@ export const hybridRecommendation = async (userId) => {
 
   const merged = {};
 
-  content.recommendedCategories.forEach((c, i) => {
-    merged[c.category] = (merged[c.category] || 0) + (1 / (i + 1)) * 0.6;
-  });
+  const add = (list, weight) => {
+    list.forEach((item, i) => {
+      const id = item.category._id;
 
-  collab.recommendedCategories.forEach((c, i) => {
-    merged[c.category] = (merged[c.category] || 0) + (1 / (i + 1)) * 0.4;
-  });
+      if (!merged[id]) {
+        merged[id] = {
+          category: item.category,
+          score: 0,
+        };
+      }
 
-  const final = Object.entries(merged)
-    .map(([cat, score]) => ({ category: cat, score }))
-    .sort((a, b) => b.score - a.score);
+      merged[id].score += (1 / (i + 1)) * weight;
+    });
+  };
+
+  add(content.recommendedCategories, 0.6);
+  add(collab.recommendedCategories, 0.4);
+
+  const final = Object.values(merged)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 5);
 
   return {
-    recommendedCategories: final.slice(0, 5),
+    recommendedCategories: final,
     method: "hybrid",
   };
 };

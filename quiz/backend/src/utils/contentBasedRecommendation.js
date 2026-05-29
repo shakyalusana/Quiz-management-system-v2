@@ -13,7 +13,12 @@ export const contentBasedRecommendation = async (userId) => {
     const id = q.category._id.toString();
 
     if (!stats[id]) {
-      stats[id] = { attempts: 0, correct: 0, total: 0 };
+      stats[id] = {
+        category: q.category,
+        attempts: 0,
+        correct: 0,
+        total: 0,
+      };
     }
 
     stats[id].attempts++;
@@ -22,11 +27,18 @@ export const contentBasedRecommendation = async (userId) => {
   });
 
   const result = Object.values(stats).map((cat) => {
-    const accuracy = (cat.correct / cat.total) * 100;
+    const accuracy = cat.total ? (cat.correct / cat.total) * 100 : 0;
 
     const score = cat.attempts * 0.4 + accuracy * 0.6;
 
-    return { category: cat, accuracy, score };
+    return {
+      category: {
+        _id: cat.category._id,
+        name: cat.category.name,
+      },
+      accuracy,
+      score,
+    };
   });
 
   result.sort((a, b) => b.score - a.score);

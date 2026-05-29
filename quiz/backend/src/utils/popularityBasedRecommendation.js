@@ -10,6 +10,7 @@ export const popularityBasedRecommendation = async () => {
 
     if (!popularity[id]) {
       popularity[id] = {
+        category: q.category,
         attempts: 0,
         totalScore: 0,
       };
@@ -19,12 +20,13 @@ export const popularityBasedRecommendation = async () => {
     popularity[id].totalScore += q.score;
   });
 
-  const result = Object.entries(popularity).map(([id, data]) => ({
-    category: id,
-    popularityScore: data.attempts + data.totalScore / 10,
+  const result = Object.values(popularity).map((p) => ({
+    category: {
+      _id: p.category._id,
+      name: p.category.name,
+    },
+    score: p.totalScore + p.attempts * 10,
   }));
-
-  result.sort((a, b) => b.popularityScore - a.popularityScore);
 
   return {
     recommendedCategories: result.slice(0, 5),

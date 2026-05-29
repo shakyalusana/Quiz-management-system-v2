@@ -12,6 +12,7 @@ import playerRoutes from "./routes/playerRoute.js";
 import authAdminRoute from "./routes/adminRoute.js";
 import historyRoutes from "./routes/historyRoute";
 import recommendationRoutes from "./routes/recommendationRoutes.js";
+import analyticsRoutes from "./routes/analyticsRoutes.js";
 
 dotenv.config({ path: "../.env" });
 
@@ -36,6 +37,7 @@ app.use("/api/player", playerRoutes);
 app.use("/api/admin", authAdminRoute);
 app.use("/api/history", historyRoutes);
 app.use("/api/recommendations", recommendationRoutes);
+app.use("/api/analytics", analyticsRoutes);
 
 const PORT = process.env.PORT || 5000;
 
