@@ -15,9 +15,9 @@ export const recommendationKeys = {
    API FUNCTIONS
 -----------------------------------*/
 const recommendationAPI = {
-  getRecommendations: async () => {
+  getRecommendations: async (type: string) => {
     const { data } = await API.get(
-      API_ENDPOINTS.RECOMMENDATION.GET_RECOMMENDATIONS,
+      `${API_ENDPOINTS.RECOMMENDATION.GET_RECOMMENDATIONS}?type=${type}`,
     );
 
     return data;
@@ -27,10 +27,10 @@ const recommendationAPI = {
 /* ----------------------------------
    HOOKS
 -----------------------------------*/
-const useRecommendations = () => {
+const useRecommendations = (type: string) => {
   return useQuery({
-    queryKey: recommendationKeys.list(),
-    queryFn: recommendationAPI.getRecommendations,
+    queryKey: [...recommendationKeys.list(), type],
+    queryFn: () => recommendationAPI.getRecommendations(type),
   });
 };
 
