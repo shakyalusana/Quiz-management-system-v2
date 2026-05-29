@@ -1,15 +1,15 @@
 import express from "express";
-
 import { getRecommendations } from "../controllers/recommendationController.js";
-
 import authMiddleware from "../middleware/authMiddleware.js";
 
-const recommendationRoutes = express.Router();
+const router = express.Router();
 
-recommendationRoutes.get(
-  "/recommendations",
-  authMiddleware,
-  getRecommendations,
-);
+// Example:
+// GET /api/recommendations?type=content
+// GET /api/recommendations?type=collaborative
+// GET /api/recommendations?type=popular
+// GET /api/recommendations?type=hybrid
 
-export default recommendationRoutes;
+router.get("/", authMiddleware, getRecommendations);
+
+export default router;

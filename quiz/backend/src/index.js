@@ -10,8 +10,8 @@ import questionRoutes from "./routes/questions.js";
 import quizRoutes from "./routes/quizRoute.js";
 import playerRoutes from "./routes/playerRoute.js";
 import authAdminRoute from "./routes/adminRoute.js";
-import recommendationRoutes from "./routes/recommendationRoutes.js";
 import historyRoutes from "./routes/historyRoute";
+import recommendationRoutes from "./routes/recommendationRoutes.js";
 
 dotenv.config({ path: "../.env" });
 
@@ -33,9 +33,9 @@ app.use("/api/categories", categoryRoutes);
 app.use("/api/questions", questionRoutes);
 app.use("/api/quiz", quizRoutes);
 app.use("/api/player", playerRoutes);
-app.use("/api", recommendationRoutes);
 app.use("/api/admin", authAdminRoute);
-app.use("/api/history", historyRoutes); // Add this line to include the history route
+app.use("/api/history", historyRoutes);
+app.use("/api/recommendations", recommendationRoutes);
 
 const PORT = process.env.PORT || 5000;
 
