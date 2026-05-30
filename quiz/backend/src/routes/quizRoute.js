@@ -59,8 +59,6 @@ quizRoutes.post("/submit", auth, async (req, res) => {
         selectedOption: Number(a.selectedOption),
         isCorrect,
         points: isCorrect ? 10 : 0,
-
-        // 🔥 FIX THAT CAUSED YOUR ERROR
         difficulty: question.difficulty,
       };
     });

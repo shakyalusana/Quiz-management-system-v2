@@ -30,15 +30,9 @@ type Category = {
    DASHBOARD
 -----------------------------------*/
 export default function PlayerDashboard() {
-  /* ----------------------------------
-     ANALYTICS
-  -----------------------------------*/
   const { data: statsData, isLoading: statsLoading } =
     ANALYTICSAPI.useUserStats();
 
-  /* ----------------------------------
-     CATEGORY LIST (for fallback mapping)
-  -----------------------------------*/
   const { data: categoriesData } = CATEGORYAPI.useCategories();
 
   const categoryMap = new Map(
@@ -55,22 +49,11 @@ export default function PlayerDashboard() {
     return String(categoryMap.get(cat) || "Unknown");
   };
 
-  /* ----------------------------------
-     RECOMMENDATIONS
-  -----------------------------------*/
   const content = RECOMMENDATIONAPI.useRecommendations("content");
   const collaborative = RECOMMENDATIONAPI.useRecommendations("collaborative");
   const popular = RECOMMENDATIONAPI.useRecommendations("popular");
   const hybrid = RECOMMENDATIONAPI.useRecommendations("hybrid");
 
-  console.log("Content-Based Recommendations:", content.data);
-  console.log("Collaborative Filtering Recommendations:", collaborative.data);
-  console.log("Popularity Trends Recommendations:", popular.data);
-  console.log("Hybrid AI Engine Recommendations:", hybrid.data);
-
-  /* ----------------------------------
-     STATS
-  -----------------------------------*/
   type StatCardProps = ComponentProps<typeof StatCard>;
 
   const stats = [
@@ -85,7 +68,7 @@ export default function PlayerDashboard() {
       label: "Accuracy",
       value: `${statsData?.accuracy ?? 0}%`,
       icon: Target,
-      accent: "accent",
+      accent: "primary",
       trend: "Correct answers rate",
     },
     {
@@ -109,22 +92,22 @@ export default function PlayerDashboard() {
   -----------------------------------*/
   const sections = [
     {
-      title: "🧠 Content-Based Intelligence",
+      title: "Content-Based Intelligence",
       color: "text-blue-500",
       query: content,
     },
     {
-      title: "🤝 Collaborative Filtering",
+      title: "Collaborative Filtering",
       color: "text-purple-500",
       query: collaborative,
     },
     {
-      title: "🔥 Popularity Trends",
+      title: "Popularity Trends",
       color: "text-orange-500",
       query: popular,
     },
     {
-      title: "🧬 Hybrid AI Engine",
+      title: "Hybrid AI Engine",
       color: "text-green-500",
       query: hybrid,
     },
@@ -138,9 +121,6 @@ export default function PlayerDashboard() {
         animate={{ opacity: 1, y: 0 }}
       >
         <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground text-sm">
-          Multi-AI recommendation system running in parallel 🧠⚡
-        </p>
       </motion.div>
 
       {/* STATS */}

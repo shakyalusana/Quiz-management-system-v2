@@ -52,10 +52,43 @@ export default function PlayerQuiz() {
 
   const [timeLeft, setTimeLeft] = useState(initialTime);
 
+  const [errors, setErrors] = useState({
+    categoryId: "",
+    count: "",
+  });
+
+  const validateQuiz = () => {
+    let valid = true;
+
+    const newErrors = {
+      categoryId: "",
+      count: "",
+    };
+
+    // Category validation
+    if (!settings.categoryId) {
+      newErrors.categoryId = "Please select a category";
+      valid = false;
+    }
+
+    // Count validation
+    if (!settings.count || settings.count < 1) {
+      newErrors.count = "Minimum 1 question required";
+      valid = false;
+    } else if (settings.count > 50) {
+      newErrors.count = "Maximum 50 questions allowed";
+      valid = false;
+    }
+
+    setErrors(newErrors);
+
+    return valid;
+  };
+
   /* ---------------- START QUIZ ---------------- */
 
   const startQuiz = async () => {
-    if (!settings.categoryId) return;
+    if (!validateQuiz()) return;
 
     try {
       setLoading(true);
@@ -152,47 +185,91 @@ export default function PlayerQuiz() {
       <div className="max-w-xl mx-auto p-6 rounded-2xl border shadow space-y-4">
         <h1 className="text-xl font-bold">Quiz Arena</h1>
 
-        <Label className="text-sm text-muted-foreground">Select Category</Label>
-        <select
-          className="w-full border p-2 rounded"
-          value={settings.categoryId}
-          onChange={(e) =>
-            setSettings({ ...settings, categoryId: e.target.value })
-          }
-        >
-          <option value="">Select Category</option>
-          {categories.map((c: Category) => (
-            <option key={c._id} value={c._id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
+        {/* CATEGORY */}
+        <div className="space-y-2">
+          <Label className="text-sm text-muted-foreground">
+            Select Category
+          </Label>
 
-        <Label className="text-sm text-muted-foreground">
-          Select Difficulty
-        </Label>
-        <select
-          className="w-full border p-2 rounded"
-          value={settings.difficulty}
-          onChange={(e) =>
-            setSettings({ ...settings, difficulty: e.target.value })
-          }
-        >
-          <option value="easy">Easy</option>
-          <option value="medium">Medium</option>
-          <option value="hard">Hard</option>
-        </select>
+          <select
+            className={`w-full border p-2 rounded ${
+              errors.categoryId ? "border-red-500" : ""
+            }`}
+            value={settings.categoryId}
+            onChange={(e) => {
+              setSettings({ ...settings, categoryId: e.target.value });
 
-        <Label className="text-sm text-muted-foreground">
-          Number of Questions
-        </Label>
-        <Input
-          type="number"
-          value={settings.count}
-          onChange={(e) =>
-            setSettings({ ...settings, count: Number(e.target.value) })
-          }
-        />
+              setErrors((prev) => ({
+                ...prev,
+                categoryId: "",
+              }));
+            }}
+          >
+            <option value="">Select Category</option>
+
+            {categories.map((c: Category) => (
+              <option key={c._id} value={c._id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+
+          {errors.categoryId && (
+            <p className="text-sm text-red-500">{errors.categoryId}</p>
+          )}
+        </div>
+
+        {/* DIFFICULTY */}
+        <div className="space-y-2">
+          <Label className="text-sm text-muted-foreground">
+            Select Difficulty
+          </Label>
+
+          <select
+            className="w-full border p-2 rounded"
+            value={settings.difficulty}
+            onChange={(e) =>
+              setSettings({
+                ...settings,
+                difficulty: e.target.value,
+              })
+            }
+          >
+            <option value="easy">Easy</option>
+            <option value="medium">Medium</option>
+            <option value="hard">Hard</option>
+          </select>
+        </div>
+
+        {/* QUESTION COUNT */}
+        <div className="space-y-2">
+          <Label className="text-sm text-muted-foreground">
+            Number of Questions
+          </Label>
+
+          <Input
+            type="number"
+            min={1}
+            max={50}
+            value={settings.count}
+            onChange={(e) => {
+              setSettings({
+                ...settings,
+                count: Number(e.target.value),
+              });
+
+              setErrors((prev) => ({
+                ...prev,
+                count: "",
+              }));
+            }}
+            className={errors.count ? "border-red-500" : ""}
+          />
+
+          {errors.count && (
+            <p className="text-sm text-red-500">{errors.count}</p>
+          )}
+        </div>
 
         <Button onClick={startQuiz} className="w-full">
           Start Challenge
@@ -205,29 +282,6 @@ export default function PlayerQuiz() {
   if (showResults) {
     return (
       <div className="max-w-3xl mx-auto p-6 space-y-6">
-        <div className="text-center border rounded-2xl p-6 shadow">
-          <Trophy className="mx-auto text-yellow-500 w-10 h-10 mb-2" />
-          <h2 className="text-xl font-bold">Results</h2>
-
-          <p className="mt-2 text-lg">
-            Score: <b>{score}</b> / {questions.length}
-          </p>
-
-          <p className="text-sm text-gray-500">
-            Accuracy: {Math.round((score / questions.length) * 100)}%
-          </p>
-
-          <Button
-            className="mt-4"
-            onClick={() => {
-              setStarted(false);
-              setShowResults(false);
-            }}
-          >
-            Play Again
-          </Button>
-        </div>
-
         {/* REVIEW SECTION */}
         <div className="space-y-4">
           {questions.map((q) => {
@@ -265,6 +319,28 @@ export default function PlayerQuiz() {
               </Card>
             );
           })}
+        </div>
+        <div className="text-center border rounded-2xl p-6 shadow">
+          <Trophy className="mx-auto text-yellow-500 w-10 h-10 mb-2" />
+          <h2 className="text-xl font-bold">Results</h2>
+
+          <p className="mt-2 text-lg">
+            Score: <b>{score}</b> / {questions.length}
+          </p>
+
+          <p className="text-sm text-gray-500">
+            Accuracy: {Math.round((score / questions.length) * 100)}%
+          </p>
+
+          <Button
+            className="mt-4"
+            onClick={() => {
+              setStarted(false);
+              setShowResults(false);
+            }}
+          >
+            Play Again
+          </Button>
         </div>
       </div>
     );
