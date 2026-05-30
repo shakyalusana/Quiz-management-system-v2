@@ -114,7 +114,7 @@ questionRoutes.post("/", [auth, validateQuestion], async (req, res) => {
   }
 });
 
-questionRoutes.patch("/:id", [auth, validateQuestion], async (req, res) => {
+questionRoutes.put("/:id", [auth, validateQuestion], async (req, res) => {
   try {
     const { text, options, correctOption, category, difficulty } = req.body;
     const updates = {};
