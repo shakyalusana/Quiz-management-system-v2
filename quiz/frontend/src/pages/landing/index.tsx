@@ -84,63 +84,6 @@ const Index = () => {
             rankings in real-time, and transform learning into a battlefield of
             brilliance.
           </motion.p>
-
-          {/* Buttons */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.35 }}
-            className="mt-10 flex flex-wrap justify-center gap-4"
-          >
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }}>
-              <Button
-                asChild
-                size="lg"
-                className="h-12 px-8 text-base shadow-xl shadow-primary/30"
-              >
-                <LinkComponent href="/players">
-                  <PlayCircle className="mr-2 h-5 w-5" />
-                  Player Demo
-                </LinkComponent>
-              </Button>
-            </motion.div>
-
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }}>
-              <Button
-                asChild
-                size="lg"
-                variant="outline"
-                className="h-12 border-white/10 bg-white/5 px-8 text-base backdrop-blur-xl hover:bg-white/10"
-              >
-                <LinkComponent href="/admin/dashboard">
-                  Admin Demo
-                </LinkComponent>
-              </Button>
-            </motion.div>
-          </motion.div>
-
-          {/* Stats */}
-          <div className="mt-16 grid gap-6 sm:grid-cols-3">
-            {[
-              ["10K+", "Questions Created"],
-              ["5K+", "Active Players"],
-              ["99%", "Quiz Completion"],
-            ].map(([value, label], i) => (
-              <motion.div
-                key={label}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 + i * 0.1 }}
-                whileHover={{ y: -6, scale: 1.02 }}
-                className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl"
-              >
-                <div className="text-3xl font-black text-primary">{value}</div>
-                <div className="mt-2 text-sm text-muted-foreground">
-                  {label}
-                </div>
-              </motion.div>
-            ))}
-          </div>
         </div>
       </section>
 

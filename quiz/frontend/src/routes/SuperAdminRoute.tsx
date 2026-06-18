@@ -9,7 +9,6 @@ const AdminDashboard = lazy(() => import("../components/adminDashboard/index"));
 const AdminCategory = lazy(() => import("../pages/admin/category/index"));
 const AdminQuestion = lazy(() => import("../pages/admin/question/index"));
 const AdminPlayers = lazy(() => import("../pages/admin/players/index"));
-const AdminLeadership = lazy(() => import("../pages/admin/leadership/index"));
 
 const SuperAdmin = [
   {
@@ -35,10 +34,6 @@ const SuperAdmin = [
           {
             path: "players",
             element: <LazyWrapper Component={AdminPlayers} />,
-          },
-          {
-            path: "leaderboard",
-            element: <LazyWrapper Component={AdminLeadership} />,
           },
           {
             path: "*",

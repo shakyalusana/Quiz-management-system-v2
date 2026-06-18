@@ -22,12 +22,6 @@ const items: NavItem[] = [
     url: "/admin/questions",
     icon: HelpCircle,
   },
-  {
-    title: "Players",
-    url: "/admin/players",
-    icon: Users,
-  },
-  { title: "LeaderBoard", url: "/admin/leaderboard", icon: Trophy },
 ];
 
 export default function AdminDashboardLayout() {

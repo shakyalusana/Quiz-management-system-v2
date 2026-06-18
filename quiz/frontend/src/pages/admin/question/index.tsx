@@ -1,14 +1,39 @@
 import { useState } from "react";
+
 import QuestionModal from "@/components/adminQuestionModel/questionModel";
 
 import { toast } from "sonner";
 import { QUESTIONAPI } from "@/api/questionApi";
 import { CATEGORYAPI } from "@/api/categoryApi";
 
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
+import { Edit2, Plus, Trash2 } from "lucide-react";
+
+import PaginationControls from "@/components/pageintion";
+
+import { useDebounce } from "@/hooks/useDebounce";
+
 interface Question {
   _id: string;
   text: string;
-  category?: string | { _id: string; name: string };
+  category?:
+    | string
+    | {
+        _id: string;
+        name: string;
+      };
   difficulty: string;
   options: string[];
   correctOption: number;
@@ -23,7 +48,24 @@ interface QuestionFormData {
 }
 
 const AdminQuestion = () => {
-  const { data: questions = [], isLoading } = QUESTIONAPI.useQuestions();
+  const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearch = useDebounce(searchTerm, 300);
+
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  const { data, isLoading } = QUESTIONAPI.useQuestions({
+    page: currentPage,
+    limit: itemsPerPage,
+    search: debouncedSearch,
+  });
+
+  const questions = data?.questions || [];
+
+  const pagination = data?.pagination;
+
+  const totalPages = pagination?.totalPages ?? 1;
 
   const { data: categories = [] } = CATEGORYAPI.useCategories();
 
@@ -34,35 +76,32 @@ const AdminQuestion = () => {
   const deleteQuestion = QUESTIONAPI.useDeleteQuestion();
 
   const [open, setOpen] = useState(false);
-  const [selectedQuestion, setSelectedQuestion] = useState<
-    Question | undefined
-  >(undefined);
 
-  // Open modal for create
+  const [selectedQuestion, setSelectedQuestion] = useState<Question>();
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(Math.max(1, Math.min(page, totalPages)));
+  };
+
   const handleAdd = () => {
     setSelectedQuestion(undefined);
     setOpen(true);
   };
 
-  // Open modal for edit
   const handleEdit = (question: Question) => {
-    // Normalize category to object if it's a string
     const normalizedCategory =
       typeof question.category === "string"
-        ? categories.find(
-            (c: { _id: string; name: string }) => c._id === question.category,
-          )
+        ? categories.find((c: any) => c._id === question.category)
         : question.category;
 
-    const normalizedQuestion: Question = {
+    setSelectedQuestion({
       ...question,
       category: normalizedCategory,
-    };
-    setSelectedQuestion(normalizedQuestion);
+    });
+
     setOpen(true);
   };
 
-  // Save handler (create or update)
   const handleSubmit = async (data: QuestionFormData) => {
     try {
       const payload = {
@@ -70,8 +109,6 @@ const AdminQuestion = () => {
         options: data.options,
         correctOption: data.correctOption,
         difficulty: data.difficulty,
-
-        // 🔥 IMPORTANT FIX
         category: data.categoryId,
       };
 
@@ -84,6 +121,7 @@ const AdminQuestion = () => {
         toast.success("Question updated");
       } else {
         await createQuestion.mutateAsync(payload);
+
         toast.success("Question created");
       }
 
@@ -96,90 +134,140 @@ const AdminQuestion = () => {
   const handleDelete = async (id: string) => {
     try {
       await deleteQuestion.mutateAsync(id);
+
       toast.success("Deleted successfully");
-    } catch (_err) {
+    } catch (err) {
       toast.error("Delete failed");
     }
   };
 
-  if (isLoading) {
-    return <div className="p-6 text-center">Loading questions...</div>;
-  }
-
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       {/* HEADER */}
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Admin Questions</h1>
 
-        <button
-          onClick={handleAdd}
-          className="bg-purple-600 text-white px-4 py-2 rounded-xl"
-        >
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-muted">Questions</h1>
+
+          <p className="text-muted-foreground mt-1">Manage quiz questions</p>
+        </div>
+
+        <Button onClick={handleAdd} className="gap-2">
+          <Plus size={18} />
           Add Question
-        </button>
+        </Button>
       </div>
 
-      {/* TABLE */}
-      <div className="overflow-x-auto border rounded-xl">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="p-3 text-left">Question</th>
-              <th className="p-3 text-left">Category</th>
-              <th className="p-3 text-left">Difficulty</th>
-              <th className="p-3 text-center">Actions</th>
-            </tr>
-          </thead>
+      <Card className="p-6">
+        {/* SEARCH */}
 
-          <tbody>
-            {questions.map((q) => (
-              <tr key={q._id} className="border-t hover:bg-gray-50">
-                <td className="p-3">{q.text}</td>
+        <div className="mb-4">
+          <Input
+            placeholder="Search questions..."
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="max-w-sm"
+          />
+        </div>
 
-                <td className="p-3">
-                  {q.category?.name ||
-                    categories.find(
-                      (c: { _id: string; name: string }) =>
-                        c._id === q.category,
-                    )?.name ||
-                    "N/A"}
-                </td>
+        {isLoading ? (
+          <p className="text-sm text-muted-foreground">Loading questions...</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Question</TableHead>
 
-                <td className="p-3 capitalize">{q.difficulty}</td>
+                  <TableHead>Category</TableHead>
 
-                <td className="p-3">
-                  <div className="flex gap-3 justify-center">
-                    <button
-                      onClick={() => handleEdit(q)}
-                      className="text-blue-600"
+                  <TableHead>Difficulty</TableHead>
+
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+
+              <TableBody>
+                {questions.length > 0 ? (
+                  questions.map((q: Question) => (
+                    <TableRow key={q._id}>
+                      <TableCell className="font-medium max-w-md">
+                        {q.text}
+                      </TableCell>
+
+                      <TableCell>
+                        <span className="px-2 py-1 rounded bg-blue-100 text-blue-700 text-sm">
+                          {typeof q.category === "object"
+                            ? q.category.name
+                            : categories.find((c: any) => c._id === q.category)
+                                ?.name || "N/A"}
+                        </span>
+                      </TableCell>
+
+                      <TableCell>
+                        <span className="px-2 py-1 rounded bg-purple-100 text-purple-700 text-sm">
+                          {q.difficulty}
+                        </span>
+                      </TableCell>
+
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEdit(q)}
+                          >
+                            <Edit2 size={16} />
+                          </Button>
+
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDelete(q._id)}
+                          >
+                            <Trash2 size={16} className="text-red-600" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell
+                      colSpan={4}
+                      className="py-8 text-center text-muted-foreground"
                     >
-                      Edit
-                    </button>
+                      No questions found
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
 
-                    <button
-                      onClick={() => handleDelete(q._id)}
-                      className="text-red-600"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
+            {/* PAGINATION */}
 
-            {questions.length === 0 && (
-              <tr>
-                <td colSpan={4} className="text-center p-6 text-gray-500">
-                  No questions found
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+            <div className="flex items-center mt-4">
+              {questions.length > 0 && (
+                <PaginationControls
+                  currentPage={currentPage}
+                  pageSize={itemsPerPage}
+                  totalItems={pagination?.totalItems ?? 0}
+                  onPageChange={handlePageChange}
+                  onPageSizeChange={(size) => {
+                    setItemsPerPage(size);
 
-      {/* MODAL */}
+                    setCurrentPage(1);
+                  }}
+                />
+              )}
+            </div>
+          </div>
+        )}
+      </Card>
+
       <QuestionModal
         open={open}
         onClose={() => setOpen(false)}

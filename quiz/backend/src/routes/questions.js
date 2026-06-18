@@ -33,10 +33,49 @@ questionRoutes.get("/quiz", async (req, res) => {
 // ✅ PROTECTED routes (admin only)
 questionRoutes.get("/", auth, async (req, res) => {
   try {
-    const questions = await Question.find().populate("category");
-    res.json(questions);
+    // Pagination values
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    // Search value
+    const search = req.query.search || "";
+
+    // Search query
+    const query = search
+      ? {
+          $or: [
+            { question: { $regex: search, $options: "i" } },
+            { answer: { $regex: search, $options: "i" } },
+          ],
+        }
+      : {};
+
+    // Fetch questions
+    const questions = await Question.find(query)
+      .populate("category")
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 });
+
+    // Total count for pagination
+    const totalQuestions = await Question.countDocuments(query);
+
+    res.json({
+      success: true,
+      data: questions,
+      pagination: {
+        totalItems: totalQuestions,
+        currentPage: page,
+        totalPages: Math.ceil(totalQuestions / limit),
+        pageSize: limit,
+      },
+    });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
   }
 });
 
