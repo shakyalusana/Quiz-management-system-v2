@@ -38,6 +38,7 @@ export default function PlayerHistory() {
               <tr className="text-left">
                 <th className="p-4 font-medium">Category</th>
                 <th className="p-4 font-medium">Score</th>
+                <th className="p-4 font-medium">Questions Attempted</th>
                 <th className="p-4 font-medium">Accuracy</th>
                 <th className="p-4 font-medium">Date</th>
                 <th className="p-4 font-medium">Status</th>
@@ -80,9 +81,10 @@ export default function PlayerHistory() {
                     </td>
 
                     {/* SCORE */}
-                    <td className="p-4 font-medium">
-                      {h.score}/{h.totalQuestions}
-                    </td>
+                    <td className="p-4 font-medium">{h.score}</td>
+
+                    {/* QUESTIONS ATTEMPTED */}
+                    <td className="p-4 ">{h.totalQuestions}</td>
 
                     {/* ACCURACY */}
                     <td className="p-4 text-muted-foreground">{accuracy}%</td>

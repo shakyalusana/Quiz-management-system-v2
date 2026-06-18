@@ -18,8 +18,12 @@ export const questionKeys = {
    API FUNCTIONS
 -----------------------------------*/
 const questionAPI = {
-  getQuestions: async () => {
-    const { data } = await API.get(API_ENDPOINTS.QUESTION.GET_ALL);
+  getQuestions: async (params?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+  }) => {
+    const { data } = await API.get(API_ENDPOINTS.QUESTION.GET_ALL, { params });
 
     return data;
   },
@@ -53,10 +57,26 @@ const questionAPI = {
    HOOKS
 -----------------------------------*/
 
-const useQuestions = () => {
+const useQuestions = (params?: {
+  page?: number;
+  limit?: number;
+  search?: string;
+}) => {
   return useQuery({
-    queryKey: questionKeys.list(),
-    queryFn: questionAPI.getQuestions,
+    queryKey: [...questionKeys.list(), params],
+
+    queryFn: async () => {
+      const response = await questionAPI.getQuestions(params);
+
+      return {
+        questions: response.data,
+        pagination: response.pagination,
+      };
+    },
+
+    meta: {
+      errorMessage: "Failed to fetch questions",
+    },
   });
 };
 

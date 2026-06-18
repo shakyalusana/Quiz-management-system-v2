@@ -64,19 +64,25 @@ categoryRoutes.put("/:id", auth, async (req, res) => {
 // Delete a category (admin only)
 categoryRoutes.delete("/:id", auth, async (req, res) => {
   try {
-    // Check if category exists
     const category = await Category.findById(req.params.id);
+
     if (!category) {
-      return res.status(404).json({ message: "Category not found" });
+      return res.status(404).json({
+        message: "Category not found",
+      });
     }
 
-    // Delete category
-    await category.remove();
+    await Category.findByIdAndDelete(req.params.id);
 
-    res.json({ message: "Category deleted" });
+    res.json({
+      message: "Category deleted",
+    });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Server error" });
+
+    res.status(500).json({
+      message: "Server error",
+    });
   }
 });
 
