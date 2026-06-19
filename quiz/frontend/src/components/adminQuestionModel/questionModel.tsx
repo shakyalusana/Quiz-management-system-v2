@@ -10,12 +10,23 @@ interface Category {
   name: string;
 }
 
+interface SubCategory {
+  _id: string;
+  name: string;
+  category?: {
+    _id: string;
+    name: string;
+  };
+}
+
 interface Question {
   text: string;
   options: string[];
   correctOption: number;
   category?: Category;
   categoryId?: string;
+  subcategoryId?: string;
+  subcategory?: SubCategory;
   difficulty: "easy" | "medium" | "hard";
 }
 
@@ -24,6 +35,7 @@ interface Props {
   onClose: () => void;
   onSubmit: (data: QuestionInput) => void;
   categories: Category[];
+  subCategories: SubCategory[];
   question?: Question;
 }
 
@@ -32,6 +44,7 @@ export default function QuestionModal({
   onClose,
   onSubmit,
   categories,
+  subCategories,
   question,
 }: Props) {
   const {
@@ -46,6 +59,7 @@ export default function QuestionModal({
       options: ["", "", "", ""],
       correctOption: 0,
       categoryId: "",
+      subcategoryId: "",
       difficulty: "medium",
     },
   });
@@ -57,6 +71,8 @@ export default function QuestionModal({
         options: question.options || ["", "", "", ""],
         correctOption: question.correctOption ?? 0,
         categoryId: question.category?._id || question.categoryId || "",
+        subcategoryId:
+          question.subcategory?._id || question.subcategoryId || "",
         difficulty: question.difficulty || "medium",
       });
     } else {
@@ -65,6 +81,7 @@ export default function QuestionModal({
         options: ["", "", "", ""],
         correctOption: 0,
         categoryId: "",
+        subcategoryId: "",
         difficulty: "medium",
       });
     }
@@ -160,6 +177,29 @@ export default function QuestionModal({
             {errors.categoryId && (
               <p className="text-red-500 text-sm">
                 {errors.categoryId.message}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label className="font-medium text-sm">Subcategory</label>
+
+            <select
+              {...register("subcategoryId")}
+              className="w-full border rounded-xl p-3 mt-1"
+            >
+              <option value="">Select Subcategory</option>
+
+              {subCategories.map((subcat) => (
+                <option key={subcat._id} value={subcat._id}>
+                  {subcat.name}
+                </option>
+              ))}
+            </select>
+
+            {errors.subcategoryId && (
+              <p className="text-red-500 text-sm">
+                {errors.subcategoryId.message}
               </p>
             )}
           </div>

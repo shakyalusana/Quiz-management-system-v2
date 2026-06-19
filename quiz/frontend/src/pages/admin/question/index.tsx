@@ -24,6 +24,7 @@ import { Edit2, Plus, Trash2 } from "lucide-react";
 import PaginationControls from "@/components/pageintion";
 
 import { useDebounce } from "@/hooks/useDebounce";
+import { SUBCATEGORYAPI } from "@/api/subcatgeoryApi";
 
 interface Question {
   _id: string;
@@ -45,6 +46,7 @@ interface QuestionFormData {
   correctOption: number;
   difficulty: string;
   categoryId: string;
+  subcategoryId: string;
 }
 
 const AdminQuestion = () => {
@@ -68,6 +70,7 @@ const AdminQuestion = () => {
   const totalPages = pagination?.totalPages ?? 1;
 
   const { data: categories = [] } = CATEGORYAPI.useCategories();
+  const { data: subCategories = [] } = SUBCATEGORYAPI.useSubCategories();
 
   const createQuestion = QUESTIONAPI.useCreateQuestion();
 
@@ -110,6 +113,7 @@ const AdminQuestion = () => {
         correctOption: data.correctOption,
         difficulty: data.difficulty,
         category: data.categoryId,
+        subcategory: data.subcategoryId,
       };
 
       if (selectedQuestion) {
@@ -272,8 +276,9 @@ const AdminQuestion = () => {
         open={open}
         onClose={() => setOpen(false)}
         onSubmit={handleSubmit}
-        categories={categories}
         question={selectedQuestion}
+        categories={categories}
+        subCategories={subCategories}
       />
     </div>
   );

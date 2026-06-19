@@ -9,6 +9,8 @@ export const questionSchema = z.object({
 
   categoryId: z.string().min(1, "Category required"),
 
+  subcategoryId: z.string().min(1, "Subcategory required"),
+
   difficulty: z.enum(["easy", "medium", "hard"]),
 });
 

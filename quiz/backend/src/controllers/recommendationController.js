@@ -2,6 +2,7 @@ import { contentBasedRecommendation } from "../utils/contentBasedRecommendation.
 import { collaborativeFiltering } from "../utils/collaborativeFiltering.js";
 import { popularityBasedRecommendation } from "../utils/popularityBasedRecommendation.js";
 import { hybridRecommendation } from "../utils/hybridRecommendation.js";
+import { kMeansRecommendation } from "../utils/kmeansRecommendation.js";
 
 /* ----------------------------------------
    MAIN CONTROLLER
@@ -29,6 +30,10 @@ export const getRecommendations = async (req, res) => {
 
       case "hybrid":
         result = await hybridRecommendation(userId);
+        break;
+
+      case "kmeans":
+        result = await kMeansRecommendation(userId);
         break;
 
       default:

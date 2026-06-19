@@ -1,9 +1,11 @@
 import { contentBasedRecommendation } from "./contentBasedRecommendation.js";
 import { collaborativeFiltering } from "./collaborativeFiltering.js";
+import { kMeansRecommendation } from "./kmeansRecommendation.js";
 
 export const hybridRecommendation = async (userId) => {
   const content = await contentBasedRecommendation(userId);
   const collab = await collaborativeFiltering(userId);
+  const cluster = await kMeansRecommendation(userId);
 
   const merged = {};
 
@@ -31,6 +33,11 @@ export const hybridRecommendation = async (userId) => {
 
   return {
     recommendedCategories: final,
-    method: "hybrid",
+
+    recommendedDifficulty: cluster.recommendedDifficulty,
+
+    playerCluster: cluster.cluster,
+
+    method: "hybrid+kmeans",
   };
 };
