@@ -46,6 +46,13 @@ export const ADMIN_ENDPOINTS = {
   LEADERBOARD: "/admin/leaderboard",
   PLAYERS: "/admin/players",
 } as const;
+
+export const SUBCATEGORY_ENDPOINTS = {
+  GET_ALL: `/subcategories`,
+  CREATE: `/subcategories`,
+  DELETE: (id: string) => `/subcategories/${id}`,
+  UPDATE: (id: string) => `/subcategories/${id}`,
+} as const;
 /* ----------------------------------
    ALL ENDPOINTS
 -----------------------------------*/
@@ -57,6 +64,7 @@ export const API_ENDPOINTS = {
   RECOMMENDATION: RECOMMENDATION_ENDPOINTS,
   HISTORY: HISTORY_ENDPOINTS,
   ADMIN: ADMIN_ENDPOINTS,
+  SUBCATEGORY: SUBCATEGORY_ENDPOINTS,
 } as const;
 
 export default API_ENDPOINTS;

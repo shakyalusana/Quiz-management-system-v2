@@ -129,24 +129,20 @@ questionRoutes.get("/count/:categoryId", auth, async (req, res) => {
 
 questionRoutes.post("/", [auth, validateQuestion], async (req, res) => {
   try {
-    const {
-      text,
-      options,
-      correctOption,
-      category,
-      difficulty = "medium",
-    } = req.body;
-
+    const { text, options, correctOption, category, subcategory, difficulty } =
+      req.body;
     const question = new Question({
       text,
       options,
       correctOption,
       category,
+      subcategory,
       difficulty,
     });
 
     const newQuestion = await question.save();
     await newQuestion.populate("category");
+    await newQuestion.populate("subcategory");
     res.status(201).json(newQuestion);
   } catch (err) {
     res.status(400).json({ message: err.message });
@@ -155,18 +151,22 @@ questionRoutes.post("/", [auth, validateQuestion], async (req, res) => {
 
 questionRoutes.put("/:id", [auth, validateQuestion], async (req, res) => {
   try {
-    const { text, options, correctOption, category, difficulty } = req.body;
+    const { text, options, correctOption, category, subcategory, difficulty } =
+      req.body;
     const updates = {};
 
     if (text) updates.text = text;
     if (options) updates.options = options;
     if (correctOption !== undefined) updates.correctOption = correctOption;
     if (category) updates.category = category;
+    if (subcategory) updates.subcategory = subcategory;
     if (difficulty) updates.difficulty = difficulty;
 
     const question = await Question.findByIdAndUpdate(req.params.id, updates, {
       new: true,
-    }).populate("category");
+    })
+      .populate("category")
+      .populate("subcategory");
 
     if (!question) {
       return res.status(404).json({ message: "Question not found" });

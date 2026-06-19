@@ -10,10 +10,16 @@ const quizRoutes = express.Router();
 /* ---------------- GET QUESTIONS ---------------- */
 quizRoutes.post("/questions", auth, async (req, res) => {
   try {
-    const { categoryId, difficulty = "medium", count = 10 } = req.body;
+    const {
+      categoryId,
+      subcategoryId,
+      difficulty = "medium",
+      count = 10,
+    } = req.body;
 
     const questions = await Question.find({
       category: categoryId,
+      subcategory: subcategoryId,
       difficulty,
     }).lean();
 
@@ -39,7 +45,7 @@ quizRoutes.post("/questions", auth, async (req, res) => {
 /* ---------------- SUBMIT QUIZ ---------------- */
 quizRoutes.post("/submit", auth, async (req, res) => {
   try {
-    const { categoryId, answers, difficulty } = req.body;
+    const { categoryId, subcategoryId, answers, difficulty } = req.body;
 
     const questions = await Question.find({
       _id: { $in: answers.map((a) => a.questionId) },
@@ -69,6 +75,7 @@ quizRoutes.post("/submit", auth, async (req, res) => {
     const quiz = await Quiz.create({
       player: req.user.id,
       category: categoryId,
+      subcategory: subcategoryId,
       score,
       totalQuestions: answers.length,
       answers: detailedAnswers,
@@ -84,6 +91,7 @@ quizRoutes.post("/submit", auth, async (req, res) => {
       quizId: quiz._id,
       user: req.user.id,
       category: categoryId,
+      subcategory: subcategoryId,
       score,
       totalQuestions: answers.length,
 

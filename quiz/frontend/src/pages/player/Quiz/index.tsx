@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { CATEGORYAPI } from "@/api/categoryApi";
 import { QUIZAPI } from "@/api/quizApi";
 import { Label } from "@/components/ui/label";
-
+import { SUBCATEGORYAPI } from "@/api/subcatgeoryApi";
 interface Question {
   _id: string;
   text: string;
@@ -22,8 +22,23 @@ interface Category {
   name: string;
 }
 
+interface SubCategory {
+  _id: string;
+  name: string;
+  category?: string;
+}
+
 export default function PlayerQuiz() {
+  const [settings, setSettings] = useState({
+    categoryId: "",
+    subcategoryId: "",
+    difficulty: "medium",
+    count: 10,
+  });
   const { data: categories = [] } = CATEGORYAPI.useCategories();
+  const { data: subCategories = [] } = SUBCATEGORYAPI.useSubCategories(
+    settings.categoryId,
+  );
   const startQuizMutation = QUIZAPI.useStartQuiz();
   const submitQuizMutation = QUIZAPI.useSubmitQuiz();
 
@@ -34,12 +49,6 @@ export default function PlayerQuiz() {
   const [selected, setSelected] = useState<Record<string, number>>({});
   const [score, setScore] = useState(0);
   const [loading, setLoading] = useState(false);
-
-  const [settings, setSettings] = useState({
-    categoryId: "",
-    difficulty: "medium",
-    count: 10,
-  });
 
   /* ---------------- TIMER ---------------- */
   const initialTime = useMemo(() => {
@@ -54,6 +63,7 @@ export default function PlayerQuiz() {
 
   const [errors, setErrors] = useState({
     categoryId: "",
+    subcategoryId: "",
     count: "",
   });
 
@@ -62,12 +72,19 @@ export default function PlayerQuiz() {
 
     const newErrors = {
       categoryId: "",
+      subcategoryId: "",
       count: "",
     };
 
     // Category validation
     if (!settings.categoryId) {
       newErrors.categoryId = "Please select a category";
+      valid = false;
+    }
+
+    // Subcategory validation
+    if (!settings.subcategoryId) {
+      newErrors.subcategoryId = "Please select a subcategory";
       valid = false;
     }
 
@@ -95,6 +112,7 @@ export default function PlayerQuiz() {
 
       const res = await startQuizMutation.mutateAsync({
         categoryId: settings.categoryId,
+        subcategoryId: settings.subcategoryId,
         difficulty: settings.difficulty,
         count: settings.count,
       });
@@ -132,6 +150,7 @@ export default function PlayerQuiz() {
 
     await submitQuizMutation.mutateAsync({
       categoryId: settings.categoryId,
+      subcategoryId: settings.subcategoryId,
       answers: questions.map((q) => ({
         questionId: q._id,
         selectedOption: selected[q._id] ?? -1,
@@ -146,6 +165,7 @@ export default function PlayerQuiz() {
     calculateScore,
     submitQuizMutation,
     settings.categoryId,
+    settings.subcategoryId,
     selected,
   ]);
 
@@ -197,7 +217,11 @@ export default function PlayerQuiz() {
             }`}
             value={settings.categoryId}
             onChange={(e) => {
-              setSettings({ ...settings, categoryId: e.target.value });
+              setSettings({
+                ...settings,
+                categoryId: e.target.value,
+                subcategoryId: "",
+              });
 
               setErrors((prev) => ({
                 ...prev,
@@ -216,6 +240,43 @@ export default function PlayerQuiz() {
 
           {errors.categoryId && (
             <p className="text-sm text-red-500">{errors.categoryId}</p>
+          )}
+        </div>
+
+        {/* CATEGORY */}
+        <div className="space-y-2">
+          <Label className="text-sm text-muted-foreground">
+            Select Subcategory
+          </Label>
+
+          <select
+            className={`w-full border p-2 rounded ${
+              errors.subcategoryId ? "border-red-500" : ""
+            }`}
+            value={settings.subcategoryId}
+            onChange={(e) => {
+              setSettings({
+                ...settings,
+                subcategoryId: e.target.value,
+              });
+
+              setErrors((prev) => ({
+                ...prev,
+                subcategoryId: "",
+              }));
+            }}
+          >
+            <option value="">Select Subcategory</option>
+
+            {subCategories.map((s: SubCategory) => (
+              <option key={s._id} value={s._id}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+
+          {errors.subcategoryId && (
+            <p className="text-sm text-red-500">{errors.subcategoryId}</p>
           )}
         </div>
 

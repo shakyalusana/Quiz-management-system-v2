@@ -18,6 +18,11 @@ const items: NavItem[] = [
     icon: HelpCircle,
   },
   {
+    title: "Subcategories",
+    url: "/admin/subcategories",
+    icon: HelpCircle,
+  },
+  {
     title: "Questions",
     url: "/admin/questions",
     icon: HelpCircle,
