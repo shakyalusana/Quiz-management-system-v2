@@ -1,27 +1,15 @@
-
 import { Button } from "@/components/ui/button";
-import { Shield, Home, ArrowLeft, Search } from "lucide-react";
+import { Home, ArrowLeft, Search } from "lucide-react";
 import LinkComponent from "./Link";
-import { Header } from "./landing/header";
 
 export default function NotFound() {
   return (
     <>
-      <Header />
       <main className="min-h-screen bg-background flex items-center justify-center px-4 py-20">
         <div className="w-full max-w-2xl">
-          {/* Decorative elements */}
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute top-20 left-10 w-72 h-72 bg-accent/5 rounded-full blur-3xl"></div>
-            <div className="absolute bottom-20 right-10 w-72 h-72 bg-accent/5 rounded-full blur-3xl"></div>
-          </div>
-
           <div className="relative z-10 text-center">
             {/* Error code */}
             <div className="mb-8">
-              <div className="inline-block p-4 bg-accent/10 rounded-2xl mb-6">
-                <Shield className="w-16 h-16 text-accent" />
-              </div>
               <h1 className="text-7xl md:text-8xl font-bold text-foreground mb-4">
                 404
               </h1>

@@ -4,6 +4,7 @@ import {
   History,
   ClipboardCheck,
   Sparkles,
+  Trophy,
 } from "lucide-react";
 
 import { Outlet } from "react-router-dom";
@@ -21,6 +22,7 @@ const items: NavItem[] = [
   { title: "Take Quiz", url: "/players/quiz", icon: PlayCircle },
   { title: "Quiz Review", url: "/players/quiz-review", icon: ClipboardCheck },
   { title: "History", url: "/players/history", icon: History },
+  { title: "Leaderboard", url: "/players/leaderboard", icon: Trophy },
 ];
 
 export default function PlayersLayout() {

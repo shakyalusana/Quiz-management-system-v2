@@ -12,6 +12,8 @@ const UserDashboard = lazy(
 const UserQuiz = lazy(() => import("../pages/player/Quiz"));
 // const UserQuizReview = lazy(() => import("../pages/player/quizReview"));
 const UserHistory = lazy(() => import("../pages/player/history"));
+const LeaderboardPage = lazy(() => import("../pages/player/leaderboard"));
+
 const UserRoute = [
   {
     element: <ProtectedRoute />,
@@ -32,6 +34,10 @@ const UserRoute = [
           {
             path: "history",
             element: <LazyWrapper Component={UserHistory} />,
+          },
+          {
+            path: "leaderboard",
+            element: <LazyWrapper Component={LeaderboardPage} />,
           },
           {
             path: "*",
