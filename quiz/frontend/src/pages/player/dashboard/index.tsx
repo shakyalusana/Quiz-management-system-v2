@@ -1,4 +1,4 @@
-import { LayoutDashboard, PlayCircle, History } from "lucide-react";
+import { LayoutDashboard, PlayCircle, History, Trophy } from "lucide-react";
 import { Outlet } from "react-router-dom";
 import { motion } from "framer-motion";
 
@@ -15,6 +15,8 @@ const items: NavItem[] = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Take Quiz", url: "/dashboard/quiz", icon: PlayCircle },
   { title: "History", url: "/dashboard/history", icon: History },
+
+  { title: "Leaderboard", url: "/dashboard/leaderboard", icon: Trophy },
 ];
 
 export default function UserDashboardLayout() {

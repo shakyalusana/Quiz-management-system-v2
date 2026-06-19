@@ -4,6 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import LinkComponent from "@/components/Link";
 import { HISTORYAPI } from "@/api/historyApi";
+import { useState } from "react";
+import HistoryDialog from "./historyDialog";
 
 type HistoryItem = {
   _id: string;
@@ -17,8 +19,11 @@ type HistoryItem = {
 
 export default function PlayerHistory() {
   const { data } = HISTORYAPI.usePlayerHistory();
-  const history: HistoryItem[] = data?.history || [];
+  const [selectedId, setSelectedId] = useState<string>("");
 
+  const { data: auditData, isLoading } = HISTORYAPI.useQuizAudit(selectedId);
+
+  const history: HistoryItem[] = data?.history || [];
   return (
     <div className="space-y-6">
       {/* HEADER */}
@@ -105,10 +110,12 @@ export default function PlayerHistory() {
 
                     {/* ACTION */}
                     <td className="p-4 text-right">
-                      <Button asChild size="sm" variant="ghost">
-                        <LinkComponent href={`/players/quiz-review/${h._id}`}>
-                          <Eye className="w-4 h-4" />
-                        </LinkComponent>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setSelectedId(h._id)}
+                      >
+                        <Eye className="w-4 h-4" />
                       </Button>
                     </td>
                   </tr>
@@ -130,6 +137,12 @@ export default function PlayerHistory() {
           </table>
         </CardContent>
       </Card>
+      <HistoryDialog
+        open={!!selectedId}
+        onClose={() => setSelectedId("")}
+        auditData={auditData}
+        isLoading={isLoading}
+      />
     </div>
   );
 }

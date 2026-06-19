@@ -69,10 +69,7 @@ function AdminDashboard() {
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <Badge variant="outline">{r.lastScore}%</Badge>
-                    <span className="text-xs text-muted-foreground">
-                      {new Date(r.lastQuizDate).toLocaleString()}
-                    </span>
+                    <Badge variant="outline">{r.lastScore}</Badge>
                   </div>
                 </div>
               ),

@@ -14,6 +14,8 @@ import historyRoutes from "./routes/historyRoute";
 import recommendationRoutes from "./routes/recommendationRoutes.js";
 import analyticsRoutes from "./routes/analyticsRoutes.js";
 import subcategoryRoutes from "./routes/subCategoryRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
+import leaderboardRoutes from "./routes/leaderboardRoutes.js";
 
 dotenv.config({ path: "../.env" });
 
@@ -40,6 +42,8 @@ app.use("/api/history", historyRoutes);
 app.use("/api/recommendations", recommendationRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/subcategories", subcategoryRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/leaderboard", leaderboardRoutes);
 
 const PORT = process.env.PORT || 5000;
 

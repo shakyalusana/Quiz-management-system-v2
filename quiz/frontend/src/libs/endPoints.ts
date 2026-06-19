@@ -53,6 +53,16 @@ export const SUBCATEGORY_ENDPOINTS = {
   DELETE: (id: string) => `/subcategories/${id}`,
   UPDATE: (id: string) => `/subcategories/${id}`,
 } as const;
+
+export const USER_ENDPOINTS = {
+  GET_PROFILE: `/users/profile`,
+  GET_ALL_PLAYERS: `/users`,
+} as const;
+
+export const LEADERBOARD_ENDPOINTS = {
+  GET_LEADERBOARD: `/leaderboard/`,
+} as const;
+
 /* ----------------------------------
    ALL ENDPOINTS
 -----------------------------------*/
@@ -65,6 +75,8 @@ export const API_ENDPOINTS = {
   HISTORY: HISTORY_ENDPOINTS,
   ADMIN: ADMIN_ENDPOINTS,
   SUBCATEGORY: SUBCATEGORY_ENDPOINTS,
+  USER: USER_ENDPOINTS,
+  LEADERBOARD: LEADERBOARD_ENDPOINTS,
 } as const;
 
 export default API_ENDPOINTS;

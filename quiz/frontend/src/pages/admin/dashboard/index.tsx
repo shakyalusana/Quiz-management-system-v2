@@ -1,4 +1,4 @@
-import { LayoutDashboard, HelpCircle, Users, Trophy } from "lucide-react";
+import { LayoutDashboard, HelpCircle, Users } from "lucide-react";
 import { Outlet } from "react-router-dom";
 import { AppSidebar, type NavItem } from "@/components/AppSideBar";
 import {
@@ -26,6 +26,11 @@ const items: NavItem[] = [
     title: "Questions",
     url: "/admin/questions",
     icon: HelpCircle,
+  },
+  {
+    title: "Players",
+    url: "/admin/players",
+    icon: Users,
   },
 ];
 
