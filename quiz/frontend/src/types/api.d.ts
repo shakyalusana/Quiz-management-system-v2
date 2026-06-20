@@ -21,80 +21,22 @@ export type UserResponse = {
   data: User;
 };
 
-export type AssetFinance = {
-  purchaseCost: number;
-} | null;
+export interface VerifyOtpInput {
+  email: string;
+  otp: string;
+}
 
-export type AssetsResponse = {
+export interface VerifyOtpResponse {
   message: string;
-  code: string;
-  data: Asset[];
-};
-
-// fiscal year
-export type FiscalYearAPIPayload = {
-  id?: string;
-  name: string;
-  startDate: string;
-  endDate: string;
-  status: boolean;
-};
-
-export type ReportAPIPayload = {
-  name: string;
-  reportType: string;
-  from?: string;
-  to?: string;
-};
-
-export interface AssetDistribution {
-  [key: string]: string | number;
-  categoryName: string;
-  percentage: number;
-  totalPurchaseCost: number;
-  totalDepreciationAmount: number;
-  totalMaintenanceCost: number;
-  totalResaleAmount: number;
+  token: string;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+  };
 }
 
-export interface PieChartComponentProps {
-  data?: AssetDistribution[];
-  isLoading?: boolean;
-}
-
-export interface FinanceBreakdownProps {
-  data?: AssetDistribution[];
-  isLoading?: boolean;
-}
-
-export interface FinancialSummary {
-  totalPurchaseCost: number;
-  totalDepreciationAmount: number;
-  totalMaintenanceCost: number;
-  totalResaleAmount: number;
-}
-
-export interface FinancialSummaryProps {
-  financialSummary?: FinancialSummary;
-  isLoading?: boolean;
-}
-
-export interface RoleListApiResponse {
+export interface ResendOtpResponse {
   message: string;
-  code: string;
-  data: Role[];
 }
-
-// organization api respone
-export type OrganizationResponse = {
-  message: string;
-  code: string;
-  data: Organization[];
-};
-
-// organization user api response
-export type OrganizationUserResponse = {
-  message: string;
-  code: string;
-  data: OrganizationUser[];
-};
