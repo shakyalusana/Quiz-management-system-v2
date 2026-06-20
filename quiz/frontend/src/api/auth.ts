@@ -4,7 +4,13 @@ import API from "@/request/request";
 import { removeUser } from "@/libs/storage";
 import { API_ENDPOINTS } from "@/libs/endPoints";
 import type { LoginInput, RegisterInput } from "@/libs/validationSchema";
-import type { LoginResponse, RegisterResponse } from "@/types/api";
+import type {
+  LoginResponse,
+  RegisterResponse,
+  ResendOtpResponse,
+  VerifyOtpInput,
+  VerifyOtpResponse,
+} from "@/types/api";
 
 const userKeys = {
   all: ["user"] as const,
@@ -35,6 +41,32 @@ const authAPI = {
     removeUser();
     return;
   },
+
+  verifyOtp: async (data: VerifyOtpInput) => {
+    const response = await API.post<VerifyOtpResponse>(
+      API_ENDPOINTS.AUTH.VERIFY_OTP,
+      data,
+      {
+        requiresAuth: false,
+      },
+    );
+
+    return response.data;
+  },
+
+  resendOtp: async (email: string) => {
+    const response = await API.post<ResendOtpResponse>(
+      API_ENDPOINTS.AUTH.RESEND_OTP,
+      {
+        email,
+      },
+      {
+        requiresAuth: false,
+      },
+    );
+
+    return response.data;
+  },
 } as const;
 
 const useUserRegister = () => {
@@ -58,8 +90,22 @@ const useUserLogout = () => {
   });
 };
 
+const useVerifyOtp = () => {
+  return useMutation({
+    mutationFn: authAPI.verifyOtp,
+  });
+};
+
+const useResendOtp = () => {
+  return useMutation({
+    mutationFn: authAPI.resendOtp,
+  });
+};
+
 export const USERAUTHAPI = {
   useUserRegister,
   useUserLogin,
   useUserLogout,
+  useVerifyOtp,
+  useResendOtp,
 } as const;

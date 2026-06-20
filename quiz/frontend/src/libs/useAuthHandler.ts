@@ -40,7 +40,10 @@ const useAuthHandler = () => {
     register(data, {
       onSuccess: (response) => {
         toast.success(response.message);
-        navigate("/login", { replace: true });
+
+        sessionStorage.setItem("pendingVerificationEmail", data.email);
+
+        navigate("/verify-otp");
       },
     });
   };

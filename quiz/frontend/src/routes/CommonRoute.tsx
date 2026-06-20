@@ -9,6 +9,7 @@ import AuthLayout from "@/pages/auth";
 const LandingPage = lazy(() => import("../pages/landing"));
 const LoginPage = lazy(() => import("../pages/auth/login"));
 const RegisterPage = lazy(() => import("../pages/auth/register"));
+const VerifyOtpPage = lazy(() => import("../pages/auth/VerifyOtpPage"));
 const NotFoundPage = lazy(() => import("../components/notFound"));
 
 const CommonRoutes = [
@@ -37,6 +38,16 @@ const CommonRoutes = [
           {
             index: true,
             element: <LazyWrapper Component={RegisterPage} />,
+          },
+        ],
+      },
+      {
+        path: "/verify-otp",
+        element: <AuthLayout />,
+        children: [
+          {
+            index: true,
+            element: <LazyWrapper Component={VerifyOtpPage} />,
           },
         ],
       },
