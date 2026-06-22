@@ -1,5 +1,8 @@
 import express from "express";
-import { getRecommendations } from "../controllers/recommendationController.js";
+import {
+  getRecommendations,
+  getAprioriRecommendation,
+} from "../controllers/recommendationController.js";
 import authMiddleware from "../middleware/authMiddleware.js";
 
 const router = express.Router();
@@ -11,5 +14,5 @@ const router = express.Router();
 // GET /api/recommendations?type=hybrid
 
 router.get("/", authMiddleware, getRecommendations);
-
+router.get("/apriori", authMiddleware, getAprioriRecommendation);
 export default router;

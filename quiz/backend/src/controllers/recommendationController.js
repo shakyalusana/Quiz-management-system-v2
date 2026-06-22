@@ -3,6 +3,7 @@ import { collaborativeFiltering } from "../utils/collaborativeFiltering.js";
 import { popularityBasedRecommendation } from "../utils/popularityBasedRecommendation.js";
 import { hybridRecommendation } from "../utils/hybridRecommendation.js";
 import { kMeansRecommendation } from "../utils/kmeansRecommendation.js";
+import { aprioriRecommendation } from "../utils/aprioriRecommendation.js";
 
 /* ----------------------------------------
    MAIN CONTROLLER
@@ -52,6 +53,26 @@ export const getRecommendations = async (req, res) => {
 
     res.status(500).json({
       message: "Failed to generate recommendations",
+    });
+  }
+};
+
+export const getAprioriRecommendation = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const result = await aprioriRecommendation(userId);
+
+    return res.status(200).json({
+      success: true,
+      ...result,
+    });
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Recommendation failed",
     });
   }
 };
