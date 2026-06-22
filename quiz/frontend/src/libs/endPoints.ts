@@ -37,6 +37,7 @@ export const QUIZ_ENDPOINTS = {
 // recommendation endpoint
 export const RECOMMENDATION_ENDPOINTS = {
   GET_RECOMMENDATIONS: `/recommendations`,
+  GET_APRIORI_RECOMMENDATION: `/recommendations/apriori`,
 } as const;
 
 export const HISTORY_ENDPOINTS = {

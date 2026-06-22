@@ -1,81 +1,195 @@
 import Quiz from "../models/quiz.js";
 
 export const collaborativeFiltering = async (userId) => {
-  const userData = await Quiz.find({ player: userId }).populate("category");
+  try {
+    /*
+      1. Get current user's quiz history
+    */
+    const userData = await Quiz.find({
+      player: userId,
+    }).populate("category");
 
-  const others = await Quiz.find({ player: { $ne: userId } }).populate(
-    "category player",
-  );
+    /*
+      2. Get other users' quiz history
+    */
+    const others = await Quiz.find({
+      player: {
+        $ne: userId,
+        $exists: true,
+      },
+    })
+      .populate("category")
+      .populate("player");
 
-  const userVector = {};
+    /*
+      Remove broken references
+      player === null
+      category === null
+    */
+    const validUserData = userData.filter((q) => q.category);
 
-  userData.forEach((q) => {
-    const id = q.category._id.toString();
-    userVector[id] = (userVector[id] || 0) + q.score;
-  });
+    const validOthers = others.filter((q) => q.player && q.category);
 
-  const profiles = {};
+    /*
+      3. Create current user's category vector
 
-  others.forEach((q) => {
-    const uid = q.player._id.toString();
-    const cid = q.category._id.toString();
+      Example:
 
-    if (!profiles[uid]) profiles[uid] = {};
-    profiles[uid][cid] = (profiles[uid][cid] || 0) + q.score;
-  });
+      {
+        sports: 150,
+        science: 80
+      }
 
-  const similarity = [];
+    */
+    const userVector = {};
 
-  for (const [uid, vector] of Object.entries(profiles)) {
-    let dot = 0,
-      a = 0,
-      b = 0;
+    validUserData.forEach((q) => {
+      const categoryId = q.category._id.toString();
 
-    for (const key in userVector) {
-      if (vector[key]) {
-        dot += userVector[key] * vector[key];
-        a += userVector[key] ** 2;
-        b += vector[key] ** 2;
+      userVector[categoryId] = (userVector[categoryId] || 0) + q.score;
+    });
+
+    /*
+      4. Create other users profiles
+
+      {
+        user1:{
+          category1:100,
+          category2:80
+        }
+      }
+
+    */
+    const profiles = {};
+
+    validOthers.forEach((q) => {
+      const userId = q.player._id.toString();
+
+      const categoryId = q.category._id.toString();
+
+      if (!profiles[userId]) {
+        profiles[userId] = {};
+      }
+
+      profiles[userId][categoryId] =
+        (profiles[userId][categoryId] || 0) + q.score;
+    });
+
+    /*
+      5. Calculate cosine similarity
+    */
+
+    const similarity = [];
+
+    for (const [uid, vector] of Object.entries(profiles)) {
+      let dot = 0;
+
+      let userMagnitude = 0;
+
+      let otherMagnitude = 0;
+
+      for (const key in userVector) {
+        const userScore = userVector[key] || 0;
+
+        const otherScore = vector[key] || 0;
+
+        dot += userScore * otherScore;
+
+        userMagnitude += userScore ** 2;
+
+        otherMagnitude += otherScore ** 2;
+      }
+
+      const denominator = Math.sqrt(userMagnitude) * Math.sqrt(otherMagnitude);
+
+      // avoid divide by zero
+      if (!denominator) {
+        continue;
+      }
+
+      const similarityScore = dot / denominator;
+
+      if (similarityScore > 0) {
+        similarity.push({
+          uid,
+
+          sim: similarityScore,
+
+          vector,
+        });
       }
     }
 
-    const sim = dot / (Math.sqrt(a) * Math.sqrt(b));
+    /*
+      6. Sort most similar users
+    */
 
-    if (sim) similarity.push({ uid, sim, vector });
-  }
+    similarity.sort((a, b) => b.sim - a.sim);
 
-  similarity.sort((a, b) => b.sim - a.sim);
+    const topUsers = similarity.slice(0, 3);
 
-  const top = similarity.slice(0, 3);
+    /*
+      7. Generate recommendations
+    */
 
-  const recMap = {};
+    const recommendationMap = {};
 
-  top.forEach((user) => {
-    Object.entries(user.vector).forEach(([cat, score]) => {
-      if (!userVector[cat]) {
-        recMap[cat] = (recMap[cat] || 0) + score;
+    topUsers.forEach((user) => {
+      Object.entries(user.vector).forEach(([categoryId, score]) => {
+        // avoid recommending already known categories
+        if (!userVector[categoryId]) {
+          recommendationMap[categoryId] =
+            (recommendationMap[categoryId] || 0) + score;
+        }
+      });
+    });
+
+    /*
+      8. Convert category IDs to category objects
+    */
+
+    const allCategories = await Quiz.find().populate("category");
+
+    const categoryMap = {};
+
+    allCategories.forEach((q) => {
+      if (q.category) {
+        categoryMap[q.category._id.toString()] = q.category;
       }
     });
-  });
 
-  // 🔥 FIX: convert IDs → real categories
-  const categories = await Quiz.find().populate("category");
+    /*
+      9. Final recommendation list
+    */
 
-  const categoryMap = {};
-  categories.forEach((q) => {
-    categoryMap[q.category._id.toString()] = q.category;
-  });
+    const recommendations = Object.entries(recommendationMap)
 
-  const recommendations = Object.entries(recMap)
-    .map(([catId, score]) => ({
-      category: categoryMap[catId],
-      score,
-    }))
-    .filter((r) => r.category)
-    .sort((a, b) => b.score - a.score);
+      .map(([categoryId, score]) => ({
+        category: categoryMap[categoryId],
 
-  return {
-    recommendedCategories: recommendations,
-    similarUsers: top.length,
-  };
+        score,
+      }))
+
+      .filter((item) => item.category)
+
+      .sort((a, b) => b.score - a.score);
+
+    return {
+      recommendedCategories: recommendations,
+
+      similarUsers: topUsers.length,
+
+      method: "collaborative-filtering",
+    };
+  } catch (error) {
+    console.error("Collaborative Filtering Error:", error);
+
+    return {
+      recommendedCategories: [],
+
+      similarUsers: 0,
+
+      method: "collaborative-filtering",
+    };
+  }
 };

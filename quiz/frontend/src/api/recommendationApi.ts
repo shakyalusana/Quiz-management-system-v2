@@ -22,6 +22,13 @@ const recommendationAPI = {
 
     return data;
   },
+  getAprioriRecommendation: async () => {
+    const { data } = await API.get(
+      `${API_ENDPOINTS.RECOMMENDATION.GET_APRIORI_RECOMMENDATION}`,
+    );
+
+    return data;
+  },
 } as const;
 
 /* ----------------------------------
@@ -39,4 +46,10 @@ const useRecommendations = (type: string) => {
 -----------------------------------*/
 export const RECOMMENDATIONAPI = {
   useRecommendations,
+  useAprioriRecommendation: () => {
+    return useQuery({
+      queryKey: [...recommendationKeys.list(), "apriori"],
+      queryFn: () => recommendationAPI.getAprioriRecommendation(),
+    });
+  },
 } as const;
