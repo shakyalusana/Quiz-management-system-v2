@@ -6,14 +6,26 @@ import { StatCard } from "../common/StatCard";
 import { RECOMMENDATIONAPI } from "@/api/recommendationApi";
 import { ANALYTICSAPI } from "@/api/analyticsApi";
 import KMeansCard from "./KMeansCard";
+import { HISTORYAPI } from "@/api/historyApi";
 
 export default function PlayerDashboard() {
   const { data: statsData, isLoading: statsLoading } =
     ANALYTICSAPI.useUserStats();
 
-  const kmeans = RECOMMENDATIONAPI.useRecommendations("kmeans");
+  const { data: historyData, isLoading: historyLoading } =
+    HISTORYAPI.usePlayerHistory();
 
+  const kmeans = RECOMMENDATIONAPI.useKMeans();
   type StatCardProps = ComponentProps<typeof StatCard>;
+
+  const bestPerformances = (historyData?.history ?? [])
+    .map((quiz: any) => ({
+      ...quiz,
+      accuracy:
+        quiz.totalQuestions > 0 ? (quiz.score / quiz.totalQuestions) * 10 : 0,
+    }))
+    .sort((a: any, b: any) => b.accuracy - a.accuracy)
+    .slice(0, 5);
 
   const stats = [
     {
@@ -46,17 +58,10 @@ export default function PlayerDashboard() {
     },
   ] satisfies StatCardProps[];
 
-  /* ----------------------------------
-     AI SECTIONS
-  -----------------------------------*/
-  const sections = [
-    {
-      title: "K-Means Clustering",
-      color: "text-red-500",
-      query: kmeans,
-      type: "cluster",
-    },
-  ];
+  const hasKMeansData =
+    !!kmeans.data?.result &&
+    kmeans.data.result.cluster !== undefined &&
+    !!kmeans.data.result.recommendedDifficulty;
 
   return (
     <div className="space-y-10">
@@ -89,34 +94,75 @@ export default function PlayerDashboard() {
         </div>
       )}
 
-      {/* RECOMMENDATION SYSTEMS */}
-      <div className="space-y-12">
-        {sections.map((section, idx) => (
-          <section key={idx} className="space-y-5">
-            {/* TITLE */}
-            <motion.h2
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className={`text-lg font-semibold ${section.color}`}
-            >
-              {section.title}
-            </motion.h2>
+      {/* K-MEANS RECOMMENDATION */}
+      {kmeans.isLoading ? (
+        <div className="text-sm text-muted-foreground">Running AI model...</div>
+      ) : hasKMeansData ? (
+        <KMeansCard data={kmeans.data} />
+      ) : null}
 
-            {/* LOADING */}
-            {/* LOADING */}
-            {section.query.isLoading ? (
-              <div className="text-sm text-muted-foreground">
-                Running AI model...
-              </div>
-            ) : section.type === "cluster" ? (
-              <KMeansCard data={section.query.data} />
-            ) : (
-              <div className="text-sm text-muted-foreground">
-                No recommendations available
-              </div>
-            )}
-          </section>
-        ))}
+      {/* BEST PERFORMANCE */}
+      <div className="rounded-xl border bg-card shadow-sm">
+        <div className="border-b px-6 py-4">
+          <h2 className="text-lg font-semibold">🏆 Best Quiz Performances</h2>
+          <p className="text-sm text-muted-foreground">
+            Your top 5 quiz attempts
+          </p>
+        </div>
+
+        {historyLoading ? (
+          <div className="p-6 text-sm text-muted-foreground">
+            Loading history...
+          </div>
+        ) : bestPerformances.length === 0 ? (
+          <div className="p-6 text-sm text-muted-foreground">
+            No quiz history available.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-muted/40">
+                <tr>
+                  <th className="px-4 py-3 text-left">Category</th>
+                  <th className="px-4 py-3 text-left">Subcategory</th>
+                  <th className="px-4 py-3 text-center">Questions Attempted</th>
+                  <th className="px-4 py-3 text-center">Score</th>
+                  <th className="px-4 py-3 text-center">Accuracy</th>
+                  <th className="px-4 py-3 text-center">Date</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {bestPerformances.map((quiz: any) => (
+                  <tr
+                    key={quiz._id}
+                    className="border-t hover:bg-muted/20 transition"
+                  >
+                    <td className="px-4 py-3">{quiz.category?.name}</td>
+
+                    <td className="px-4 py-3">{quiz.subcategory?.name}</td>
+
+                    <td className="px-4 py-3 text-center capitalize">
+                      {quiz.totalQuestions}
+                    </td>
+
+                    <td className="px-4 py-3 text-center font-semibold">
+                      {quiz.score}
+                    </td>
+
+                    <td className="px-4 py-3 text-center text-green-600 font-semibold">
+                      {quiz.accuracy.toFixed(1)}%
+                    </td>
+
+                    <td className="px-4 py-3 text-center">
+                      {new Date(quiz.date).toLocaleDateString()}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

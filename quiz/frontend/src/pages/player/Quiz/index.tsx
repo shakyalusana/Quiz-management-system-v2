@@ -4,8 +4,12 @@ import {
   Trophy,
   CheckCircle2,
   XCircle,
-  Lightbulb,
   Star,
+  Brain,
+  Users,
+  Zap,
+  Check,
+  RefreshCw,
 } from "lucide-react";
 
 import { Card } from "@/components/ui/card";
@@ -18,6 +22,7 @@ import { QUIZAPI } from "@/api/quizApi";
 import { Label } from "@/components/ui/label";
 import { SUBCATEGORYAPI } from "@/api/subcatgeoryApi";
 import { RECOMMENDATIONAPI } from "@/api/recommendationApi";
+import { RecommendationCard } from "./recommendationCard";
 
 interface Question {
   _id: string;
@@ -37,11 +42,6 @@ interface SubCategory {
   category?: string;
 }
 
-interface RecommendedCategory extends Category {
-  isRecommended?: boolean;
-  fromRule?: boolean;
-}
-
 export default function PlayerQuiz() {
   const [settings, setSettings] = useState({
     categoryId: "",
@@ -57,13 +57,11 @@ export default function PlayerQuiz() {
   const startQuizMutation = QUIZAPI.useStartQuiz();
   const submitQuizMutation = QUIZAPI.useSubmitQuiz();
 
-  // =============== ALGORITHM INTEGRATION POINTS ===============
-  // Get multiple recommendation algorithms for different sections
-  const apriori = RECOMMENDATIONAPI.useAprioriRecommendation();
-  const contentBased = RECOMMENDATIONAPI.useRecommendations("content");
-  const collaborative = RECOMMENDATIONAPI.useRecommendations("collaborative");
-  const hybrid = RECOMMENDATIONAPI.useRecommendations("hybrid");
-  const popularity = RECOMMENDATIONAPI.useRecommendations("popular");
+  const apriori = RECOMMENDATIONAPI.useApriori();
+  const contentBased = RECOMMENDATIONAPI.useContentBased();
+  const collaborative = RECOMMENDATIONAPI.useCollaborative();
+  const hybrid = RECOMMENDATIONAPI.useHybrid();
+  const popularity = RECOMMENDATIONAPI.usePopularity();
 
   const [questions, setQuestions] = useState<Question[]>([]);
   const [started, setStarted] = useState(false);
@@ -77,8 +75,9 @@ export default function PlayerQuiz() {
   const recommendedCategories = useMemo(() => {
     if (!apriori.data) return [];
 
-    const data = apriori.data.result || apriori.data;
+    const data = apriori.data?.data;
 
+    if (!data) return [];
     const ids = new Set<string>();
 
     // Keep recommendations
@@ -95,9 +94,9 @@ export default function PlayerQuiz() {
 
     // Return category objects + recommendation info
     return categories
-      .filter((category: Category) => ids.has(category._id))
-      .map((category: Category) => ({
-        ...category,
+      .filter((category) => ids.has(category._id))
+      .map((category) => ({
+        category,
         isRecommended: data.recommendations?.includes(category._id),
         fromRule: data.rules?.some((rule: any) =>
           rule.consequent?.includes(category._id),
@@ -266,7 +265,7 @@ export default function PlayerQuiz() {
   /* =============== LOADING STATE =============== */
   if (loading) {
     return (
-      <div className="max-w-xl mx-auto p-6 rounded-2xl border shadow space-y-4 text-center">
+      <div className="p-6 rounded-2xl border shadow space-y-4 text-center">
         <h1 className="text-xl font-bold">Loading Quiz...</h1>
         <p className="text-muted-foreground">Preparing your challenge</p>
       </div>
@@ -276,187 +275,180 @@ export default function PlayerQuiz() {
   /* =============== START SCREEN =============== */
   if (!started && !showResults) {
     return (
-      <div className="max-w-xl mx-auto p-6 rounded-2xl border shadow space-y-4">
-        <h1 className="text-xl font-bold">Quiz Arena</h1>
-
-        {/* =============== ALGORITHM 1: A-PRIORI RECOMMENDATIONS =============== */}
-        {apriori.isLoading ? (
-          <div className="text-sm text-muted-foreground">
-            Loading smart recommendations...
-          </div>
-        ) : recommendedCategories.length > 0 ? (
-          <div className="rounded-xl border p-4 bg-muted/30 space-y-3">
-            <h2 className="font-semibold flex items-center gap-2">
-              <Lightbulb size={16} />
-              A-Priori Recommended Categories
-            </h2>
-
-            <p className="text-sm text-muted-foreground">
-              Based on association rule mining of your quiz history
-            </p>
-
-            <div className="flex flex-wrap gap-3">
-              {recommendedCategories.map((category: RecommendedCategory) => (
-                <Button
-                  key={category._id}
-                  variant="outline"
-                  onClick={() => {
-                    setSettings({
-                      ...settings,
-                      categoryId: category._id,
-                      subcategoryId: "",
-                    });
-
-                    setErrors({
-                      categoryId: "",
-                      subcategoryId: "",
-                      count: "",
-                    });
-                  }}
-                >
-                  {category.name}
-
-                  {category.isRecommended && (
-                    <span className="ml-2 text-xs">
-                      <Star size={16} />
-                    </span>
-                  )}
-                </Button>
-              ))}
-            </div>
-          </div>
-        ) : null}
-
-        {/* CATEGORY SELECT */}
+      <div className="p-6 space-y-6">
         <div className="space-y-2">
-          <Label className="text-sm text-muted-foreground">
-            Select Category
-          </Label>
-
-          <select
-            className={`w-full border p-2 rounded ${
-              errors.categoryId ? "border-red-500" : ""
-            }`}
-            value={settings.categoryId}
-            onChange={(e) => {
-              setSettings({
-                ...settings,
-                categoryId: e.target.value,
-                subcategoryId: "",
-              });
-
-              setErrors((prev) => ({
-                ...prev,
-                categoryId: "",
-              }));
-            }}
-          >
-            <option value="">Select Category</option>
-
-            {categories.map((c: Category) => (
-              <option key={c._id} value={c._id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-
-          {errors.categoryId && (
-            <p className="text-sm text-red-500">{errors.categoryId}</p>
-          )}
+          <h1 className="text-3xl font-bold bg-linear-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            Quiz Arena
+          </h1>
+          <p className="text-muted-foreground">
+            Choose your challenge and level up your knowledge
+          </p>
         </div>
 
-        {/* SUBCATEGORY SELECT */}
-        <div className="space-y-2">
-          <Label className="text-sm text-muted-foreground">
-            Select Subcategory
-          </Label>
-
-          <select
-            className={`w-full border p-2 rounded ${
-              errors.subcategoryId ? "border-red-500" : ""
-            }`}
-            value={settings.subcategoryId}
-            onChange={(e) => {
-              setSettings({
-                ...settings,
-                subcategoryId: e.target.value,
-              });
-
-              setErrors((prev) => ({
-                ...prev,
-                subcategoryId: "",
-              }));
-            }}
-          >
-            <option value="">Select Subcategory</option>
-
-            {subCategories.map((s: SubCategory) => (
-              <option key={s._id} value={s._id}>
-                {s.name}
-              </option>
-            ))}
-          </select>
-
-          {errors.subcategoryId && (
-            <p className="text-sm text-red-500">{errors.subcategoryId}</p>
-          )}
-        </div>
-
-        {/* DIFFICULTY SELECT */}
-        <div className="space-y-2">
-          <Label className="text-sm text-muted-foreground">
-            Select Difficulty
-          </Label>
-
-          <select
-            className="w-full border p-2 rounded"
-            value={settings.difficulty}
-            onChange={(e) =>
-              setSettings({
-                ...settings,
-                difficulty: e.target.value,
-              })
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* =============== A-PRIORI RECOMMENDATIONS (ASSOCIATION RULES) =============== */}
+          <RecommendationCard
+            title="Recommended for You"
+            description="Based on your quiz history patterns"
+            items={
+              apriori.data?.data?.recommendations?.length
+                ? recommendedCategories.slice(0, 3)
+                : []
             }
-          >
-            <option value="easy">Easy</option>
-            <option value="medium">Medium</option>
-            <option value="hard">Hard</option>
-          </select>
-        </div>
-
-        {/* QUESTION COUNT */}
-        <div className="space-y-2">
-          <Label className="text-sm text-muted-foreground">
-            Number of Questions
-          </Label>
-
-          <Input
-            type="number"
-            min={1}
-            max={50}
-            value={settings.count}
-            onChange={(e) => {
-              setSettings({
-                ...settings,
-                count: Number(e.target.value),
-              });
-
-              setErrors((prev) => ({
-                ...prev,
-                count: "",
-              }));
-            }}
-            className={errors.count ? "border-red-500" : ""}
+            icon={Star}
+            gradient="from-amber-50 to-yellow-50"
+            isLoading={apriori.isLoading}
           />
 
-          {errors.count && (
-            <p className="text-sm text-red-500">{errors.count}</p>
-          )}
+          {/* =============== COLLABORATIVE FILTERING =============== */}
+          <RecommendationCard
+            title="Popular with Users Like You"
+            description="Trending among users with similar performance"
+            items={collaborative.data?.data?.recommendedCategories?.slice(0, 3)}
+            icon={Users}
+            gradient="from-purple-50 to-pink-50"
+            isLoading={collaborative.isLoading}
+          />
+
+          {/* =============== HYBRID RECOMMENDATIONS =============== */}
+          <RecommendationCard
+            title="Popular & Trending"
+            description="Categories that are both popular and trending"
+            items={popularity.data?.data?.recommendedCategories?.slice(0, 3)}
+            icon={Zap}
+            gradient="from-green-50 to-emerald-50"
+            isLoading={popularity.isLoading}
+          />
         </div>
 
-        <Button onClick={startQuiz} className="w-full">
-          Start Challenge
-        </Button>
+        {/* QUIZ SETTINGS */}
+        <div className="border rounded-xl p-6 space-y-4 bg-slate-50">
+          <h2 className="font-semibold text-lg">Quiz Settings</h2>
+
+          {/* CATEGORY SELECT */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Select Category</Label>
+            <select
+              className={`w-full border p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                errors.categoryId ? "border-red-500" : "border-gray-300"
+              }`}
+              value={settings.categoryId}
+              onChange={(e) => {
+                setSettings({
+                  ...settings,
+                  categoryId: e.target.value,
+                  subcategoryId: "",
+                });
+
+                setErrors((prev) => ({
+                  ...prev,
+                  categoryId: "",
+                }));
+              }}
+            >
+              <option value="">Select Category</option>
+
+              {categories.map((c: Category) => (
+                <option key={c._id} value={c._id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+
+            {errors.categoryId && (
+              <p className="text-sm text-red-500">{errors.categoryId}</p>
+            )}
+          </div>
+
+          {/* SUBCATEGORY SELECT */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Select Subcategory</Label>
+            <select
+              className={`w-full border p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                errors.subcategoryId ? "border-red-500" : "border-gray-300"
+              }`}
+              value={settings.subcategoryId}
+              onChange={(e) => {
+                setSettings({
+                  ...settings,
+                  subcategoryId: e.target.value,
+                });
+
+                setErrors((prev) => ({
+                  ...prev,
+                  subcategoryId: "",
+                }));
+              }}
+            >
+              <option value="">Select Subcategory</option>
+
+              {subCategories.map((s: SubCategory) => (
+                <option key={s._id} value={s._id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+
+            {errors.subcategoryId && (
+              <p className="text-sm text-red-500">{errors.subcategoryId}</p>
+            )}
+          </div>
+
+          {/* DIFFICULTY SELECT */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Select Difficulty</Label>
+            <select
+              className="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={settings.difficulty}
+              onChange={(e) =>
+                setSettings({
+                  ...settings,
+                  difficulty: e.target.value,
+                })
+              }
+            >
+              <option value="easy">Easy</option>
+              <option value="medium">Medium</option>
+              <option value="hard">Hard</option>
+            </select>
+          </div>
+
+          {/* QUESTION COUNT */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Number of Questions</Label>
+            <Input
+              type="number"
+              min={1}
+              max={50}
+              value={settings.count}
+              onChange={(e) => {
+                setSettings({
+                  ...settings,
+                  count: Number(e.target.value),
+                });
+
+                setErrors((prev) => ({
+                  ...prev,
+                  count: "",
+                }));
+              }}
+              className={`p-3 rounded-lg focus:ring-2 focus:ring-blue-500 ${
+                errors.count ? "border-red-500" : ""
+              }`}
+            />
+
+            {errors.count && (
+              <p className="text-sm text-red-500">{errors.count}</p>
+            )}
+          </div>
+
+          <Button
+            onClick={startQuiz}
+            className="w-full py-6 text-lg bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+          >
+            Start Challenge
+          </Button>
+        </div>
       </div>
     );
   }
@@ -464,117 +456,57 @@ export default function PlayerQuiz() {
   /* =============== RESULTS SCREEN =============== */
   if (showResults) {
     return (
-      <div className="max-w-3xl mx-auto p-6 space-y-6">
-        {/* =============== ALGORITHM 2-5: POST-QUIZ RECOMMENDATIONS =============== */}
-        {/* These algorithms use the quiz results to recommend next steps */}
+      <div className="p-6 space-y-6">
+        {/* RESULTS CARD */}
+        <div className="text-center border rounded-2xl p-8 shadow-lg bg-gradient-to-br from-yellow-50 to-orange-50">
+          <Trophy className="mx-auto text-yellow-500 w-12 h-12 mb-4" />
+          <h2 className="text-2xl font-bold">Quiz Complete!</h2>
 
-        {/* CONTENT-BASED RECOMMENDATIONS */}
-        {contentBased.isLoading ? null : contentBased.data?.result
-            ?.recommendedCategories?.length ? (
-          <div className="rounded-xl border p-4 bg-blue-50 space-y-3">
-            <h3 className="font-semibold text-blue-900">
-              📚 Content-Based Recommendations
-            </h3>
-            <p className="text-sm text-blue-700">
-              Similar to categories you've done well in
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {contentBased.data.result.recommendedCategories
-                .slice(0, 3)
-                .map((rec: any) => (
-                  <span
-                    key={rec.category._id}
-                    className="px-3 py-1 rounded-full bg-blue-200 text-blue-900 text-sm"
-                  >
-                    {rec.category.name} ({rec.accuracy.toFixed(1)}%)
-                  </span>
-                ))}
-            </div>
-          </div>
-        ) : null}
+          <p className="mt-4 text-3xl font-bold text-blue-600">
+            {score} / {questions.length}
+          </p>
 
-        {/* COLLABORATIVE FILTERING RECOMMENDATIONS */}
-        {collaborative.isLoading ? null : collaborative.data?.result
-            ?.recommendedCategories?.length ? (
-          <div className="rounded-xl border p-4 bg-purple-50 space-y-3">
-            <h3 className="font-semibold text-purple-900">
-              👥 Collaborative Filtering
-            </h3>
-            <p className="text-sm text-purple-700">
-              Popular among users with similar performance
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {collaborative.data.result.recommendedCategories
-                .slice(0, 3)
-                .map((rec: any) => (
-                  <span
-                    key={rec.category._id}
-                    className="px-3 py-1 rounded-full bg-purple-200 text-purple-900 text-sm"
-                  >
-                    {rec.category.name}
-                  </span>
-                ))}
-            </div>
-          </div>
-        ) : null}
+          <p className="text-lg text-gray-600 mt-2">
+            Accuracy:{" "}
+            <span className="font-semibold">
+              {quizMetrics.accuracy.toFixed(1)}%
+            </span>
+          </p>
 
-        {/* HYBRID RECOMMENDATIONS */}
-        {hybrid.isLoading ? null : hybrid.data?.result?.recommendedCategories
-            ?.length ? (
-          <div className="rounded-xl border p-4 bg-green-50 space-y-3">
-            <h3 className="font-semibold text-green-900">
-              🎯 Hybrid AI Engine
-            </h3>
-            <p className="text-sm text-green-700">
-              Best of all algorithms combined
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {hybrid.data.result.recommendedCategories
-                .slice(0, 3)
-                .map((rec: any) => (
-                  <span
-                    key={rec.category._id}
-                    className="px-3 py-1 rounded-full bg-green-200 text-green-900 text-sm"
-                  >
-                    {rec.category.name}
-                  </span>
-                ))}
-            </div>
-          </div>
-        ) : null}
-
-        {/* POPULARITY-BASED RECOMMENDATIONS */}
-        {popularity.isLoading ? null : popularity.data?.result
-            ?.recommendedCategories?.length ? (
-          <div className="rounded-xl border p-4 bg-orange-50 space-y-3">
-            <h3 className="font-semibold text-orange-900">🔥 Trending Now</h3>
-            <p className="text-sm text-orange-700">
-              Most popular categories across all players
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {popularity.data.result.recommendedCategories
-                .slice(0, 3)
-                .map((rec: any) => (
-                  <span
-                    key={rec.category._id}
-                    className="px-3 py-1 rounded-full bg-orange-200 text-orange-900 text-sm"
-                  >
-                    {rec.category.name}
-                  </span>
-                ))}
-            </div>
-          </div>
-        ) : null}
+          <p className="text-lg mt-3 font-semibold">
+            {quizMetrics.performance === "excellent"
+              ? "🌟 Excellent Performance!"
+              : quizMetrics.performance === "good"
+                ? "👍 Great Job!"
+                : "📈 Keep Practicing!"}
+          </p>
+        </div>
 
         {/* REVIEW SECTION */}
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold">Question Review</h2>
-          {questions.map((q) => {
+          <h3 className="text-xl font-semibold">Question Review</h3>
+          {questions.map((q, idx) => {
             const userAnswer = selected[q._id];
+            const isCorrect = userAnswer === q.correctOption;
 
             return (
-              <Card key={q._id} className="p-4 space-y-2">
-                <div className="font-semibold">{q.text}</div>
+              <Card
+                key={q._id}
+                className="p-5 space-y-3 border-l-4 border-l-blue-500"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-blue-600">
+                    Question {idx + 1} of {questions.length}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="font-semibold">{q.text}</div>
+                  {isCorrect ? (
+                    <CheckCircle2 className="text-green-600 w-5 h-5" />
+                  ) : (
+                    <XCircle className="text-red-600 w-5 h-5" />
+                  )}
+                </div>
 
                 {q.options.map((opt, i) => {
                   const isUser = userAnswer === i;
@@ -583,21 +515,17 @@ export default function PlayerQuiz() {
                   return (
                     <div
                       key={i}
-                      className={`p-2 rounded border flex items-center justify-between
-                        ${
-                          isRight
-                            ? "bg-green-100 border-green-500 text-green-600"
-                            : isUser
-                              ? "bg-red-100 border-red-500 text-red-600"
-                              : ""
-                        }`}
+                      className={`p-3 rounded-lg border-2 flex items-center justify-between transition ${
+                        isRight
+                          ? "bg-green-100 border-green-500 text-green-700"
+                          : isUser
+                            ? "bg-red-100 border-red-500 text-red-700"
+                            : "bg-gray-50 border-gray-200"
+                      }`}
                     >
-                      {opt}
-
-                      {isRight && <CheckCircle2 className="text-green-600" />}
-                      {isUser && !isRight && (
-                        <XCircle className="text-red-600" />
-                      )}
+                      <span>{opt}</span>
+                      {isRight && <CheckCircle2 size={18} />}
+                      {isUser && !isRight && <XCircle size={18} />}
                     </div>
                   );
                 })}
@@ -606,67 +534,95 @@ export default function PlayerQuiz() {
           })}
         </div>
 
-        {/* RESULTS CARD */}
-        <div className="text-center border rounded-2xl p-6 shadow">
-          <Trophy className="mx-auto text-yellow-500 w-10 h-10 mb-2" />
-          <h2 className="text-xl font-bold">Results</h2>
+        {/* =============== POST-QUIZ RECOMMENDATIONS =============== */}
+        <div className="space-y-4 ">
+          <h3 className="text-xl font-semibold">What's Next?</h3>
 
-          <p className="mt-2 text-lg">
-            Score: <b>{score}</b> / {questions.length}
-          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* CONTENT-BASED RECOMMENDATIONS */}
+            <RecommendationCard
+              title="Based on Your Performance"
+              description="Similar categories where you can apply your knowledge"
+              items={contentBased.data?.data?.recommendedCategories?.slice(
+                0,
+                3,
+              )}
+              icon={Brain}
+              gradient="from-blue-50 to-cyan-50"
+              isLoading={contentBased.isLoading}
+            />
 
-          <p className="text-sm text-gray-500">
-            Accuracy: {quizMetrics.accuracy.toFixed(1)}%
-          </p>
-
-          <p className="text-sm mt-2 font-semibold">
-            Performance:{" "}
-            {quizMetrics.performance === "excellent"
-              ? "🌟 Excellent!"
-              : quizMetrics.performance === "good"
-                ? "👍 Good Job!"
-                : "📈 Keep Practicing!"}
-          </p>
-
-          <Button
-            className="mt-4"
-            onClick={() => {
-              setStarted(false);
-              setShowResults(false);
-            }}
-          >
-            Play Again
-          </Button>
+            {/* HYBRID RECOMMENDATIONS */}
+            <RecommendationCard
+              title="Smart Recommendations"
+              description="Combined insights from all algorithms"
+              items={hybrid.data?.data?.recommendedCategories
+                ?.slice(0, 3)
+                .map((rec: any) => ({
+                  category: rec.category,
+                  subcategory: { name: "Suggested" },
+                  accuracy: rec.score * 100,
+                }))}
+              icon={Zap}
+              gradient="from-green-50 to-emerald-50"
+              isLoading={hybrid.isLoading}
+            />
+          </div>
         </div>
+
+        <Button
+          className="w-full py-6 text-lg bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+          onClick={() => {
+            setStarted(false);
+            setShowResults(false);
+          }}
+        >
+          <RefreshCw className="w-5 h-5 mr-2" /> Play Again
+        </Button>
       </div>
     );
   }
 
   /* =============== QUIZ SCREEN =============== */
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
+    <div className="p-6 space-y-6">
       {/* TOP BAR */}
-      <div className="flex justify-between items-center p-3 border rounded-xl">
-        <div className="flex items-center gap-2">
-          <Clock size={16} />
-          {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, "0")}
+      <div className="flex justify-between items-center p-4 border rounded-xl bg-gradient-to-r from-blue-50 to-purple-50 shadow-sm">
+        <div className="flex items-center gap-2 font-semibold">
+          <Clock size={18} className="text-blue-600" />
+          <span className="text-lg">
+            {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, "0")}
+          </span>
         </div>
 
-        <div>Answered: {Object.keys(selected).length}</div>
+        <div className="text-sm font-medium">
+          Answered:{" "}
+          <span className="font-bold text-blue-600">
+            {Object.keys(selected).length}
+          </span>{" "}
+          / {questions.length}
+        </div>
       </div>
 
-      <Progress value={progress} />
+      <Progress value={progress} className="h-2" />
 
       {/* ALL QUESTIONS */}
-      <div className="space-y-6">
-        {questions.map((q) => (
-          <Card key={q._id} className="p-5 space-y-3">
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">
-                Question {questions.indexOf(q) + 1} of {questions.length}
+      <div className="space-y-6 pb-6">
+        {questions.map((q, idx) => (
+          <Card
+            key={q._id}
+            className="p-6 space-y-4 border-l-4 border-l-blue-500 shadow-sm hover:shadow-md transition"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-blue-600">
+                Question {idx + 1} of {questions.length}
               </span>
+              {selected[q._id] !== undefined && (
+                <CheckCircle2 size={20} className="text-green-600" />
+              )}
             </div>
-            <h2 className="font-semibold">{q.text}</h2>
+
+            <h3 className="font-semibold text-lg">{q.text}</h3>
 
             <div className="space-y-2">
               {q.options.map((opt, i) => {
@@ -681,12 +637,11 @@ export default function PlayerQuiz() {
                         [q._id]: i,
                       }))
                     }
-                    className={`p-3 border rounded-lg cursor-pointer transition
-                      ${
-                        isSelected
-                          ? "bg-green-100 border-green-500 text-green-600"
-                          : "hover:bg-gray-100 text-gray-700"
-                      }`}
+                    className={`p-4 border-2 rounded-lg cursor-pointer transition ${
+                      isSelected
+                        ? "bg-blue-100 border-blue-500 text-blue-700 font-medium"
+                        : "hover:bg-gray-50 border-gray-200 text-gray-700"
+                    }`}
                   >
                     {opt}
                   </div>
@@ -697,8 +652,11 @@ export default function PlayerQuiz() {
         ))}
       </div>
 
-      <Button onClick={submitQuiz} className="w-full">
-        Finish Quiz
+      <Button
+        onClick={submitQuiz}
+        className="w-full py-6 text-lg bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 "
+      >
+        <Check size={18} className="mr-2" /> Finish Quiz
       </Button>
     </div>
   );

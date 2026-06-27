@@ -2,194 +2,143 @@ import Quiz from "../models/quiz.js";
 
 export const collaborativeFiltering = async (userId) => {
   try {
-    /*
-      1. Get current user's quiz history
-    */
     const userData = await Quiz.find({
       player: userId,
-    }).populate("category");
+    })
+      .populate("category")
+      .populate("subcategory");
 
-    /*
-      2. Get other users' quiz history
-    */
     const others = await Quiz.find({
       player: {
         $ne: userId,
         $exists: true,
       },
     })
+      .populate("player")
       .populate("category")
-      .populate("player");
+      .populate("subcategory");
 
-    /*
-      Remove broken references
-      player === null
-      category === null
-    */
-    const validUserData = userData.filter((q) => q.category);
+    const validUserData = userData.filter((q) => q.category && q.subcategory);
 
-    const validOthers = others.filter((q) => q.player && q.category);
+    const validOthers = others.filter(
+      (q) => q.player && q.category && q.subcategory,
+    );
 
-    /*
-      3. Create current user's category vector
-
-      Example:
-
-      {
-        sports: 150,
-        science: 80
-      }
-
-    */
     const userVector = {};
 
     validUserData.forEach((q) => {
-      const categoryId = q.category._id.toString();
+      const key = `${q.category._id}_${q.subcategory._id}`;
 
-      userVector[categoryId] = (userVector[categoryId] || 0) + q.score;
+      userVector[key] = (userVector[key] || 0) + q.score;
     });
 
-    /*
-      4. Create other users profiles
-
-      {
-        user1:{
-          category1:100,
-          category2:80
-        }
-      }
-
-    */
     const profiles = {};
 
     validOthers.forEach((q) => {
-      const userId = q.player._id.toString();
+      const uid = q.player._id.toString();
 
-      const categoryId = q.category._id.toString();
+      const key = `${q.category._id}_${q.subcategory._id}`;
 
-      if (!profiles[userId]) {
-        profiles[userId] = {};
+      if (!profiles[uid]) {
+        profiles[uid] = {};
       }
 
-      profiles[userId][categoryId] =
-        (profiles[userId][categoryId] || 0) + q.score;
+      profiles[uid][key] = (profiles[uid][key] || 0) + q.score;
     });
-
-    /*
-      5. Calculate cosine similarity
-    */
 
     const similarity = [];
 
     for (const [uid, vector] of Object.entries(profiles)) {
       let dot = 0;
+      let mag1 = 0;
+      let mag2 = 0;
 
-      let userMagnitude = 0;
+      const keys = new Set([
+        ...Object.keys(userVector),
+        ...Object.keys(vector),
+      ]);
 
-      let otherMagnitude = 0;
+      keys.forEach((key) => {
+        const a = userVector[key] || 0;
+        const b = vector[key] || 0;
 
-      for (const key in userVector) {
-        const userScore = userVector[key] || 0;
+        dot += a * b;
+        mag1 += a * a;
+        mag2 += b * b;
+      });
 
-        const otherScore = vector[key] || 0;
+      const denominator = Math.sqrt(mag1) * Math.sqrt(mag2);
 
-        dot += userScore * otherScore;
+      if (!denominator) continue;
 
-        userMagnitude += userScore ** 2;
+      const sim = dot / denominator;
 
-        otherMagnitude += otherScore ** 2;
-      }
-
-      const denominator = Math.sqrt(userMagnitude) * Math.sqrt(otherMagnitude);
-
-      // avoid divide by zero
-      if (!denominator) {
-        continue;
-      }
-
-      const similarityScore = dot / denominator;
-
-      if (similarityScore > 0) {
+      if (sim > 0) {
         similarity.push({
           uid,
-
-          sim: similarityScore,
-
+          sim,
           vector,
         });
       }
     }
 
-    /*
-      6. Sort most similar users
-    */
-
     similarity.sort((a, b) => b.sim - a.sim);
 
     const topUsers = similarity.slice(0, 3);
 
-    /*
-      7. Generate recommendations
-    */
-
     const recommendationMap = {};
 
     topUsers.forEach((user) => {
-      Object.entries(user.vector).forEach(([categoryId, score]) => {
-        // avoid recommending already known categories
-        if (!userVector[categoryId]) {
-          recommendationMap[categoryId] =
-            (recommendationMap[categoryId] || 0) + score;
+      Object.entries(user.vector).forEach(([key, score]) => {
+        if (!userVector[key]) {
+          recommendationMap[key] = (recommendationMap[key] || 0) + score;
         }
       });
     });
 
-    /*
-      8. Convert category IDs to category objects
-    */
+    const quizzes = await Quiz.find()
+      .populate("category")
+      .populate("subcategory");
 
-    const allCategories = await Quiz.find().populate("category");
+    const itemMap = {};
 
-    const categoryMap = {};
+    quizzes.forEach((q) => {
+      if (q.category && q.subcategory) {
+        const key = `${q.category._id}_${q.subcategory._id}`;
 
-    allCategories.forEach((q) => {
-      if (q.category) {
-        categoryMap[q.category._id.toString()] = q.category;
+        itemMap[key] = {
+          category: {
+            _id: q.category._id,
+            name: q.category.name,
+          },
+          subCategory: {
+            _id: q.subcategory._id,
+            name: q.subcategory.name,
+          },
+        };
       }
     });
 
-    /*
-      9. Final recommendation list
-    */
-
     const recommendations = Object.entries(recommendationMap)
-
-      .map(([categoryId, score]) => ({
-        category: categoryMap[categoryId],
-
+      .map(([key, score]) => ({
+        ...itemMap[key],
         score,
       }))
-
-      .filter((item) => item.category)
-
+      .filter((r) => r.category)
       .sort((a, b) => b.score - a.score);
 
     return {
-      recommendedCategories: recommendations,
-
-      similarUsers: topUsers.length,
-
       method: "collaborative-filtering",
+      similarUsers: topUsers.length,
+      recommendedCategories: recommendations,
     };
-  } catch (error) {
-    console.error("Collaborative Filtering Error:", error);
+  } catch (err) {
+    console.error(err);
 
     return {
-      recommendedCategories: [],
-
-      similarUsers: 0,
-
       method: "collaborative-filtering",
+      similarUsers: 0,
+      recommendedCategories: [],
     };
   }
 };
