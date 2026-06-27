@@ -1,8 +1,10 @@
 import User from "../models/user.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { sendEmail } from "../utils/sendEmail.js";
+import { transporter } from "../utils/sendEmail.js";
+import dotenv from "dotenv";
 
+dotenv.config();
 const generateToken = (id, role) => {
   return jwt.sign(
     {
@@ -48,11 +50,11 @@ export const registerUser = async (req, res) => {
       otpExpiry,
     });
 
-    await sendEmail(
-      email,
-      "Quiz App Email Verification",
-      `
-      <div style="font-family:Arial,sans-serif">
+    await transporter.sendMail({
+      from: `"Quiz Management" <${process.env.SENDER_EMAIL}>`,
+      to: email,
+      subject: "your OTP",
+      html: `<div>
         <h2>Hello ${name}</h2>
 
         <p>Welcome to Quiz App.</p>
@@ -62,9 +64,9 @@ export const registerUser = async (req, res) => {
         <h1 style="color:#2563eb">${otp}</h1>
 
         <p>This OTP is valid for 10 minutes.</p>
-      </div>
+        </div>
       `,
-    );
+    });
 
     res.status(201).json({
       message: "Registration successful. OTP sent to email.",
@@ -124,6 +126,7 @@ export const verifyOtp = async (req, res) => {
 
 // LOGIN
 export const loginUser = async (req, res) => {
+  console.log("Login request received:", req.body); // Debugging line
   try {
     const { email, password } = req.body;
 

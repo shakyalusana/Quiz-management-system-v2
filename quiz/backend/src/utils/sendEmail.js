@@ -1,7 +1,16 @@
 import nodemailer from "nodemailer";
+
 import dotenv from "dotenv";
 
 dotenv.config();
+
+if (!process.env.SMTP_HOST || !process.env.SMTP_PORT) {
+  throw new Error("SMTP config missing in .env");
+}
+
+if (!process.env.SMTP_USER || !process.env.SMTP_PASSWORD) {
+  throw new Error("SMTP auth config missing in .env");
+}
 
 export const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
@@ -13,19 +22,3 @@ export const transporter = nodemailer.createTransport({
     pass: process.env.SMTP_PASSWORD,
   },
 });
-
-export const sendEmail = async (to, subject, html) => {
-  try {
-    await transporter.sendMail({
-      from: process.env.SENDER_EMAIL,
-      to,
-      subject,
-      html,
-    });
-
-    console.log("Email sent successfully");
-  } catch (error) {
-    console.log(error);
-    throw new Error("Email sending failed");
-  }
-};
