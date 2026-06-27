@@ -560,7 +560,6 @@ export default function PlayerQuiz() {
                 ?.slice(0, 3)
                 .map((rec: any) => ({
                   category: rec.category,
-                  subcategory: { name: "Suggested" },
                   accuracy: rec.score * 100,
                 }))}
               icon={Zap}

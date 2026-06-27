@@ -43,8 +43,6 @@ const LeaderboardPage = () => {
 
               <th className="px-4 py-4 text-left">Player</th>
 
-              <th className="px-4 py-4 text-left">Rating</th>
-
               <th className="px-4 py-4 text-left">Quizzes</th>
 
               <th className="px-4 py-4 text-left">Avg Score</th>
@@ -80,12 +78,6 @@ const LeaderboardPage = () => {
                       {player.email}
                     </p>
                   </div>
-                </td>
-
-                <td className="px-4 py-4">
-                  <span className="rounded-lg bg-blue-100 px-3 py-1 text-sm font-semibold text-blue-700">
-                    {player.rating}
-                  </span>
                 </td>
 
                 <td className="px-4 py-4">{player.totalQuizzes}</td>
