@@ -36,8 +36,13 @@ export const QUIZ_ENDPOINTS = {
 
 // recommendation endpoint
 export const RECOMMENDATION_ENDPOINTS = {
-  GET_RECOMMENDATIONS: `/recommendations`,
-  GET_APRIORI_RECOMMENDATION: `/recommendations/apriori`,
+  CONTENT_BASED: `/quiz/recommendations/content-based`,
+  COLLABORATIVE: `/quiz/recommendations/collaborative`,
+  POPULARITY: `/quiz/recommendations/popularity`,
+  HYBRID: `/quiz/recommendations/hybrid`,
+  KMEANS: `/quiz/recommendations/kmeans`,
+  APRIORI: `/quiz/recommendations/apriori`,
+  ALL: `/quiz/recommendations/all`,
 } as const;
 
 export const HISTORY_ENDPOINTS = {

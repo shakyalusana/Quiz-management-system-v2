@@ -6,6 +6,7 @@ export const getQuizHistory = async (req, res) => {
 
     const history = await QuizAudit.find({ user: userId })
       .populate("category", "name")
+      .populate("subcategory", "name")
       .sort({ createdAt: -1 });
 
     const formatted = history.map((h) => ({
@@ -13,6 +14,7 @@ export const getQuizHistory = async (req, res) => {
       score: h.score,
       totalQuestions: h.totalQuestions,
       category: h.category,
+      subcategory: h.subcategory,
       date: h.createdAt,
     }));
 

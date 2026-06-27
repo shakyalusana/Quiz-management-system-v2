@@ -1,40 +1,53 @@
 import Quiz from "../models/quiz.js";
 
 export const contentBasedRecommendation = async (userId) => {
-  const quizzes = await Quiz.find({ player: userId }).populate("category");
+  const quizzes = await Quiz.find({
+    player: userId,
+  })
+    .populate("category")
+    .populate("subcategory");
 
   if (!quizzes.length) {
-    return { recommendedCategories: [], recommendedDifficulty: "easy" };
+    return {
+      recommendedCategories: [],
+    };
   }
 
   const stats = {};
 
   quizzes.forEach((q) => {
-    const id = q.category._id.toString();
+    const key = `${q.category._id}_${q.subcategory._id}`;
 
-    if (!stats[id]) {
-      stats[id] = {
+    if (!stats[key]) {
+      stats[key] = {
         category: q.category,
+        subcategory: q.subcategory,
         attempts: 0,
         correct: 0,
         total: 0,
       };
     }
 
-    stats[id].attempts++;
-    stats[id].correct += q.answers.filter((a) => a.isCorrect).length;
-    stats[id].total += q.totalQuestions;
+    stats[key].attempts++;
+
+    stats[key].correct += q.answers.filter((a) => a.isCorrect).length;
+
+    stats[key].total += q.totalQuestions;
   });
 
-  const result = Object.values(stats).map((cat) => {
-    const accuracy = cat.total ? (cat.correct / cat.total) * 100 : 0;
+  const result = Object.values(stats).map((item) => {
+    const accuracy = item.total === 0 ? 0 : (item.correct / item.total) * 100;
 
-    const score = cat.attempts * 0.4 + accuracy * 0.6;
+    const score = accuracy * 0.6 + item.attempts * 0.4;
 
     return {
       category: {
-        _id: cat.category._id,
-        name: cat.category.name,
+        _id: item.category._id,
+        name: item.category.name,
+      },
+      subcategory: {
+        _id: item.subcategory._id,
+        name: item.subcategory.name,
       },
       accuracy,
       score,
